@@ -1,9 +1,24 @@
+import { useState } from "react";
 import { Box, Paper, IconButton, Typography } from "@mui/material";
 import StarIcon from "@mui/icons-material/Star";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import RemoveIcon from "@mui/icons-material/Remove";
-import { LAYOUT, Z_INDEX } from "@/constants";
+import { LAYOUT, Z_INDEX, GRADIENTS } from "@/constants";
+import { StackThumbnail } from "./StackThumbnail";
+
+interface Stack {
+  id: string;
+  name: string;
+  coverUrl: string;
+  cardCount: number;
+}
+
+const mockStacks: Stack[] = [
+  { id: "1", name: "Favorites", coverUrl: GRADIENTS[0], cardCount: 3 },
+  { id: "2", name: "Read Later", coverUrl: GRADIENTS[1], cardCount: 5 },
+  { id: "3", name: "Shopping", coverUrl: GRADIENTS[2], cardCount: 2 },
+];
 
 interface DockExpandedProps {
   onMinimize: () => void;
@@ -11,6 +26,12 @@ interface DockExpandedProps {
 }
 
 export function DockExpanded({ onMinimize, onAddStack }: DockExpandedProps) {
+  const [activeStackId, setActiveStackId] = useState<string | null>(null);
+
+  const handleStackClick = (stackId: string) => {
+    setActiveStackId((prev) => (prev === stackId ? null : stackId));
+  };
+
   return (
     <Paper
       elevation={8}
@@ -54,11 +75,23 @@ export function DockExpanded({ onMinimize, onAddStack }: DockExpandedProps) {
           flex: 1,
           display: "flex",
           alignItems: "center",
-          justifyContent: "center",
-          color: "text.secondary",
+          gap: `${LAYOUT.THUMBNAIL_GAP}px`,
+          overflowX: "auto",
+          py: 1,
+          "&::-webkit-scrollbar": {
+            display: "none",
+          },
+          scrollbarWidth: "none",
         }}
       >
-        <Typography variant="body2">Stack thumbnails here</Typography>
+        {mockStacks.map((stack) => (
+          <StackThumbnail
+            key={stack.id}
+            stack={stack}
+            isActive={activeStackId === stack.id}
+            onClick={() => handleStackClick(stack.id)}
+          />
+        ))}
       </Box>
 
       {/* Right: Action buttons */}
