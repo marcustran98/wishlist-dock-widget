@@ -1,12 +1,11 @@
-import { useState } from "react";
 import { Box, Paper, IconButton, Typography } from "@mui/material";
-import { LAYOUT, Z_INDEX, GRADIENTS } from "@/constants";
-import { StackThumbnail } from "./StackThumbnail";
-import { SearchBar } from "./SearchBar";
 import StarIcon from "@mui/icons-material/Star";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import RemoveIcon from "@mui/icons-material/Remove";
+import { LAYOUT, Z_INDEX } from "@/constants";
+import { StackThumbnail } from "./StackThumbnail";
+import { SearchBar } from "./SearchBar";
 
 interface Stack {
   id: string;
@@ -15,30 +14,31 @@ interface Stack {
   cardCount: number;
 }
 
-const mockStacks: Stack[] = [
-  { id: "1", name: "Favorites", coverUrl: GRADIENTS[0], cardCount: 3 },
-  { id: "2", name: "Read Later", coverUrl: GRADIENTS[1], cardCount: 5 },
-  { id: "3", name: "Shopping", coverUrl: GRADIENTS[2], cardCount: 2 },
-];
-
 interface DockExpandedProps {
+  stacks: Stack[];
+  activeStackId: string | null;
+  searchQuery: string;
+  isSearchOpen: boolean;
   onMinimize: () => void;
   onAddStack: () => void;
+  onStackClick: (stackId: string) => void;
+  onSearchChange: (value: string) => void;
+  onSearchToggle: () => void;
+  onSearchClose: () => void;
 }
 
-export function DockExpanded({ onMinimize, onAddStack }: DockExpandedProps) {
-  const [activeStackId, setActiveStackId] = useState<string | null>(null);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const handleStackClick = (stackId: string) => {
-    setActiveStackId((prev) => (prev === stackId ? null : stackId));
-  };
-
-  const filteredStacks = mockStacks.filter((stack) =>
-    stack.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
+export function DockExpanded({
+  stacks,
+  activeStackId,
+  searchQuery,
+  isSearchOpen,
+  onMinimize,
+  onAddStack,
+  onStackClick,
+  onSearchChange,
+  onSearchToggle,
+  onSearchClose,
+}: DockExpandedProps) {
   return (
     <Paper
       elevation={8}
@@ -91,15 +91,15 @@ export function DockExpanded({ onMinimize, onAddStack }: DockExpandedProps) {
           scrollbarWidth: "none",
         }}
       >
-        {filteredStacks.map((stack) => (
+        {stacks.map((stack) => (
           <StackThumbnail
             key={stack.id}
             stack={stack}
             isActive={activeStackId === stack.id}
-            onClick={() => handleStackClick(stack.id)}
+            onClick={() => onStackClick(stack.id)}
           />
         ))}
-        {filteredStacks.length === 0 && (
+        {stacks.length === 0 && (
           <Typography variant="body2" color="text.secondary">
             No stacks found
           </Typography>
@@ -111,8 +111,8 @@ export function DockExpanded({ onMinimize, onAddStack }: DockExpandedProps) {
         {isSearchOpen ? (
           <SearchBar
             value={searchQuery}
-            onChange={setSearchQuery}
-            onClose={() => setIsSearchOpen(false)}
+            onChange={onSearchChange}
+            onClose={onSearchClose}
           />
         ) : (
           <>
@@ -129,7 +129,7 @@ export function DockExpanded({ onMinimize, onAddStack }: DockExpandedProps) {
             >
               <AddIcon />
             </IconButton>
-            <IconButton color="default" onClick={() => setIsSearchOpen(true)}>
+            <IconButton color="default" onClick={onSearchToggle}>
               <SearchIcon />
             </IconButton>
             <IconButton onClick={onMinimize} color="default">
