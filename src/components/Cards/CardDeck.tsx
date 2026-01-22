@@ -1,27 +1,37 @@
 import { useState } from "react";
 import { Box, Typography, IconButton, Button } from "@mui/material";
-import { LAYOUT, Z_INDEX } from "@/constants";
-import { Card } from "./Card";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-
-interface CardData {
-  id: string;
-  name: string;
-  description?: string;
-  coverUrl: string;
-}
+import { LAYOUT, Z_INDEX, CARD_DECK } from "@/constants";
+import { type Card as CardType } from "./Card";
+import { SwipeableCard } from "./SwipeableCard";
 
 interface CardDeckProps {
   stackId: string;
   stackName: string;
-  cards: CardData[];
+  cards: CardType[];
   onClose: () => void;
   onAddCard: () => void;
-  onEditCard: (card: CardData) => void;
-  onDeleteCard: (card: CardData) => void;
+  onEditCard: (card: CardType) => void;
+  onDeleteCard: (card: CardType) => void;
+}
+
+function getVisibleCards(
+  cards: CardType[],
+  currentIndex: number,
+  count: number
+): CardType[] {
+  if (cards.length === 0) return [];
+
+  const result: CardType[] = [];
+  const visibleCount = Math.min(count, cards.length);
+  for (let i = 0; i < visibleCount; i++) {
+    const index = (currentIndex + i) % cards.length;
+    result.push(cards[index]);
+  }
+  return result;
 }
 
 export function CardDeck({
@@ -34,15 +44,36 @@ export function CardDeck({
 }: CardDeckProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  const safeCurrentIndex =
+    cards.length === 0
+      ? 0
+      : ((currentIndex % cards.length) + cards.length) % cards.length;
+
+  const handleSwipe = (direction: "left" | "right") => {
+    if (cards.length <= 1) return;
+
+    if (direction === "left") {
+      setCurrentIndex((prev) => (prev + 1) % cards.length);
+    } else {
+      setCurrentIndex((prev) => (prev - 1 + cards.length) % cards.length);
+    }
+  };
+
   const handlePrevious = () => {
-    setCurrentIndex((prev) => Math.max(0, prev - 1));
+    if (cards.length <= 1) return;
+    setCurrentIndex((prev) => (prev - 1 + cards.length) % cards.length);
   };
 
   const handleNext = () => {
-    setCurrentIndex((prev) => Math.min(cards.length - 1, prev + 1));
+    if (cards.length <= 1) return;
+    setCurrentIndex((prev) => (prev + 1) % cards.length);
   };
 
-  const currentCard = cards[currentIndex];
+  const visibleCards = getVisibleCards(
+    cards,
+    safeCurrentIndex,
+    CARD_DECK.VISIBLE_CARDS
+  );
 
   return (
     <Box
@@ -76,7 +107,7 @@ export function CardDeck({
         </Typography>
         {cards.length > 0 && (
           <Typography variant="body2" color="text.secondary">
-            {currentIndex + 1} / {cards.length}
+            {safeCurrentIndex + 1} / {cards.length}
           </Typography>
         )}
         <IconButton size="small" onClick={onAddCard} color="primary">
@@ -87,42 +118,78 @@ export function CardDeck({
         </IconButton>
       </Box>
 
+      {/* Swipe hint */}
+      {cards.length > 1 && safeCurrentIndex === 0 && (
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ mb: 1, opacity: 0.7 }}
+        >
+          Swipe or use arrows to browse
+        </Typography>
+      )}
+
       {/* Card area */}
       {cards.length > 0 ? (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          {/* Left navigation */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <IconButton
             onClick={handlePrevious}
-            disabled={currentIndex === 0}
+            disabled={cards.length <= 1}
             sx={{
               backgroundColor: "background.paper",
               boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+              "&:hover": { backgroundColor: "grey.100" },
               "&:disabled": {
                 backgroundColor: "background.paper",
-                opacity: 0.5,
+                opacity: 0.4,
               },
             }}
           >
             <ChevronLeftIcon />
           </IconButton>
 
-          {/* Current card */}
-          <Card
-            card={currentCard}
-            onEdit={() => onEditCard(currentCard)}
-            onDelete={() => onDeleteCard(currentCard)}
-          />
+          <Box
+            sx={{
+              width: CARD_DECK.CARD_WIDTH + 40,
+              height: CARD_DECK.CARD_HEIGHT + 20,
+              position: "relative",
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <Box
+              sx={{
+                width: CARD_DECK.CARD_WIDTH,
+                height: CARD_DECK.CARD_HEIGHT,
+                position: "relative",
+              }}
+            >
+              {visibleCards
+                .map((card, index) => (
+                  <SwipeableCard
+                    key={card.id}
+                    card={card}
+                    isTop={index === 0}
+                    stackIndex={index}
+                    onSwipe={handleSwipe}
+                    onEdit={() => onEditCard(card)}
+                    onDelete={() => onDeleteCard(card)}
+                  />
+                ))
+                .reverse()}
+            </Box>
+          </Box>
 
-          {/* Right navigation */}
           <IconButton
             onClick={handleNext}
-            disabled={currentIndex === cards.length - 1}
+            disabled={cards.length <= 1}
             sx={{
               backgroundColor: "background.paper",
               boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+              "&:hover": { backgroundColor: "grey.100" },
               "&:disabled": {
                 backgroundColor: "background.paper",
-                opacity: 0.5,
+                opacity: 0.4,
               },
             }}
           >
@@ -132,8 +199,8 @@ export function CardDeck({
       ) : (
         <Box
           sx={{
-            width: 280,
-            height: 400,
+            width: CARD_DECK.CARD_WIDTH,
+            height: CARD_DECK.CARD_HEIGHT,
             borderRadius: "16px",
             backgroundColor: "background.paper",
             display: "flex",
@@ -154,6 +221,31 @@ export function CardDeck({
           >
             Add Card
           </Button>
+        </Box>
+      )}
+
+      {/* Dot indicators */}
+      {cards.length > 1 && (
+        <Box sx={{ display: "flex", gap: 0.75, mt: 2 }}>
+          {cards.map((card, index) => (
+            <Box
+              key={card.id}
+              onClick={() => setCurrentIndex(index)}
+              sx={{
+                width: index === safeCurrentIndex ? 16 : 8,
+                height: 8,
+                borderRadius: "4px",
+                backgroundColor:
+                  index === safeCurrentIndex ? "primary.main" : "grey.300",
+                transition: "all 0.2s",
+                cursor: "pointer",
+                "&:hover": {
+                  backgroundColor:
+                    index === safeCurrentIndex ? "primary.main" : "grey.400",
+                },
+              }}
+            />
+          ))}
         </Box>
       )}
     </Box>

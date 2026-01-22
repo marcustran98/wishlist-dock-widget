@@ -1,8 +1,9 @@
 import { Box, Typography, IconButton } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { CARD_DECK } from "@/constants";
 
-interface Card {
+export interface Card {
   id: string;
   name: string;
   description?: string;
@@ -19,8 +20,8 @@ export function Card({ card, onEdit, onDelete }: CardProps) {
   return (
     <Box
       sx={{
-        width: 280,
-        height: 400,
+        width: CARD_DECK.CARD_WIDTH,
+        height: CARD_DECK.CARD_HEIGHT,
         borderRadius: "16px",
         position: "relative",
         overflow: "hidden",

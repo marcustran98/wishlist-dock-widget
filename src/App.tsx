@@ -1,13 +1,37 @@
-import { ThemeProvider, CssBaseline, Typography, Box } from "@mui/material";
+import { useState } from "react";
+import { ThemeProvider, CssBaseline, Typography, Box, IconButton } from "@mui/material";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import LightModeIcon from "@mui/icons-material/LightMode";
 import { createAppTheme } from "@/theme";
 import { Dock } from "@/components/Dock";
 
-const theme = createAppTheme("light");
-
 function App() {
+  const [mode, setMode] = useState<"light" | "dark">("light");
+  const theme = createAppTheme(mode);
+
+  const toggleTheme = () => {
+    setMode((prev) => (prev === "light" ? "dark" : "light"));
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <IconButton
+        onClick={toggleTheme}
+        sx={{
+          position: "fixed",
+          top: 16,
+          right: 16,
+          zIndex: 9999,
+          backgroundColor: "background.paper",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+          "&:hover": {
+            backgroundColor: "action.hover",
+          },
+        }}
+      >
+        {mode === "light" ? <DarkModeIcon /> : <LightModeIcon />}
+      </IconButton>
       <Box
         sx={{
           display: "flex",

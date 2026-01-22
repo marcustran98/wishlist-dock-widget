@@ -95,6 +95,7 @@ export function Dock() {
     <>
       {activeStackId && activeStack && (
         <CardDeck
+          key={activeStackId}
           stackId={activeStackId}
           stackName={activeStack.name}
           cards={mockCards}
