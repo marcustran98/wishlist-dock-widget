@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Box, Paper, IconButton, Typography } from "@mui/material";
+import { LAYOUT, Z_INDEX, GRADIENTS } from "@/constants";
+import { StackThumbnail } from "./StackThumbnail";
+import { SearchBar } from "./SearchBar";
 import StarIcon from "@mui/icons-material/Star";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import RemoveIcon from "@mui/icons-material/Remove";
-import { LAYOUT, Z_INDEX, GRADIENTS } from "@/constants";
-import { StackThumbnail } from "./StackThumbnail";
 
 interface Stack {
   id: string;
@@ -27,10 +28,16 @@ interface DockExpandedProps {
 
 export function DockExpanded({ onMinimize, onAddStack }: DockExpandedProps) {
   const [activeStackId, setActiveStackId] = useState<string | null>(null);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleStackClick = (stackId: string) => {
     setActiveStackId((prev) => (prev === stackId ? null : stackId));
   };
+
+  const filteredStacks = mockStacks.filter((stack) =>
+    stack.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   return (
     <Paper
@@ -84,7 +91,7 @@ export function DockExpanded({ onMinimize, onAddStack }: DockExpandedProps) {
           scrollbarWidth: "none",
         }}
       >
-        {mockStacks.map((stack) => (
+        {filteredStacks.map((stack) => (
           <StackThumbnail
             key={stack.id}
             stack={stack}
@@ -92,29 +99,44 @@ export function DockExpanded({ onMinimize, onAddStack }: DockExpandedProps) {
             onClick={() => handleStackClick(stack.id)}
           />
         ))}
+        {filteredStacks.length === 0 && (
+          <Typography variant="body2" color="text.secondary">
+            No stacks found
+          </Typography>
+        )}
       </Box>
 
       {/* Right: Action buttons */}
       <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-        <IconButton
-          onClick={onAddStack}
-          color="primary"
-          sx={{
-            backgroundColor: "primary.main",
-            color: "white",
-            "&:hover": {
-              backgroundColor: "primary.dark",
-            },
-          }}
-        >
-          <AddIcon />
-        </IconButton>
-        <IconButton color="default">
-          <SearchIcon />
-        </IconButton>
-        <IconButton onClick={onMinimize} color="default">
-          <RemoveIcon />
-        </IconButton>
+        {isSearchOpen ? (
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onClose={() => setIsSearchOpen(false)}
+          />
+        ) : (
+          <>
+            <IconButton
+              onClick={onAddStack}
+              color="primary"
+              sx={{
+                backgroundColor: "primary.main",
+                color: "white",
+                "&:hover": {
+                  backgroundColor: "primary.dark",
+                },
+              }}
+            >
+              <AddIcon />
+            </IconButton>
+            <IconButton color="default" onClick={() => setIsSearchOpen(true)}>
+              <SearchIcon />
+            </IconButton>
+            <IconButton onClick={onMinimize} color="default">
+              <RemoveIcon />
+            </IconButton>
+          </>
+        )}
       </Box>
     </Paper>
   );
