@@ -25,26 +25,4 @@ export const GRADIENTS = [
 export const CARD_DECK = {
   CARD_WIDTH: 280,
   CARD_HEIGHT: 400,
-  SWIPE_THRESHOLD: 100,
-  SWIPE_VELOCITY_THRESHOLD: 500,
-  VISIBLE_CARDS: 4,
-  DRAG_RANGE: [-200, 0, 200] as const,
-  DRAG_ROTATION_RANGE: [-25, 0, 25] as const,
-  STACK_CONFIG: [
-    { rotate: 0, x: 0, y: 0, scale: 1 },
-    { rotate: 3, x: 8, y: 4, scale: 0.98 },
-    { rotate: -2, x: -6, y: 8, scale: 0.96 },
-    { rotate: 4, x: 10, y: 12, scale: 0.94 },
-  ] as const,
-} as const;
-
-export const ANIMATION = {
-  SPRING_SNAPPY: { type: "spring" as const, stiffness: 500, damping: 30 },
-  SPRING_SMOOTH: { type: "spring" as const, stiffness: 300, damping: 30 },
-  SPRING_GENTLE: { type: "spring" as const, stiffness: 300, damping: 25 },
-} as const;
-
-export const COLORS = {
-  INDICATOR_NEXT_RIGHT: "rgba(76, 175, 80, 0.9)",
-  INDICATOR_NEXT_LEFT: "rgba(33, 150, 243, 0.9)",
 } as const;

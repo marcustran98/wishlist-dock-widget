@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Box, Typography, IconButton, Button } from "@mui/material";
-import { AnimatePresence } from "framer-motion";
-import CloseIcon from "@mui/icons-material/Close";
-import AddIcon from "@mui/icons-material/Add";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { EffectCards } from "swiper/modules";
+import { Card } from "./Card";
+import type { Swiper as SwiperType } from "swiper";
 import { LAYOUT, Z_INDEX, CARD_DECK } from "@/constants";
 import type { Card as CardType } from "@/types";
-import { SwipeableCard } from "./SwipeableCard";
+import CloseIcon from "@mui/icons-material/Close";
+import AddIcon from "@mui/icons-material/Add";
+
+import "swiper/css";
+import "swiper/css/effect-cards";
 
 interface CardDeckProps {
   stackName: string;
@@ -18,22 +21,6 @@ interface CardDeckProps {
   onDeleteCard: (card: CardType) => void;
 }
 
-function getVisibleCards(
-  cards: CardType[],
-  currentIndex: number,
-  count: number
-): CardType[] {
-  if (cards.length === 0) return [];
-
-  const result: CardType[] = [];
-  const visibleCount = Math.min(count, cards.length);
-  for (let i = 0; i < visibleCount; i++) {
-    const index = (currentIndex + i) % cards.length;
-    result.push(cards[index]);
-  }
-  return result;
-}
-
 export function CardDeck({
   stackName,
   cards,
@@ -42,38 +29,16 @@ export function CardDeck({
   onEditCard,
   onDeleteCard,
 }: CardDeckProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const swiperRef = useRef<SwiperType | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
 
-  const safeCurrentIndex =
-    cards.length === 0
-      ? 0
-      : ((currentIndex % cards.length) + cards.length) % cards.length;
-
-  const handleSwipe = (direction: "left" | "right") => {
-    if (cards.length <= 1) return;
-
-    if (direction === "left") {
-      setCurrentIndex((prev) => (prev + 1) % cards.length);
-    } else {
-      setCurrentIndex((prev) => (prev - 1 + cards.length) % cards.length);
-    }
+  const handleSlideChange = (swiper: SwiperType) => {
+    setActiveIndex(swiper.activeIndex);
   };
 
-  const handlePrevious = () => {
-    if (cards.length <= 1) return;
-    setCurrentIndex((prev) => (prev - 1 + cards.length) % cards.length);
+  const handleDotClick = (index: number) => {
+    swiperRef.current?.slideTo(index);
   };
-
-  const handleNext = () => {
-    if (cards.length <= 1) return;
-    setCurrentIndex((prev) => (prev + 1) % cards.length);
-  };
-
-  const visibleCards = getVisibleCards(
-    cards,
-    safeCurrentIndex,
-    CARD_DECK.VISIBLE_CARDS
-  );
 
   return (
     <Box
@@ -107,7 +72,7 @@ export function CardDeck({
         </Typography>
         {cards.length > 0 && (
           <Typography variant="body2" color="text.secondary">
-            {safeCurrentIndex + 1} / {cards.length}
+            {activeIndex + 1} / {cards.length}
           </Typography>
         )}
         <IconButton size="small" onClick={onAddCard} color="primary">
@@ -119,84 +84,71 @@ export function CardDeck({
       </Box>
 
       {/* Swipe hint */}
-      {cards.length > 1 && safeCurrentIndex === 0 && (
+      {cards.length > 1 && activeIndex === 0 && (
         <Typography
           variant="caption"
           color="text.secondary"
           sx={{ mb: 1, opacity: 0.7 }}
         >
-          Swipe or use arrows to browse
+          Swipe to browse
         </Typography>
       )}
 
       {/* Card area */}
       {cards.length > 0 ? (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <IconButton
-            onClick={handlePrevious}
-            disabled={cards.length <= 1}
-            sx={{
-              backgroundColor: "background.paper",
-              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-              "&:hover": { backgroundColor: "grey.100" },
-              "&:disabled": {
-                backgroundColor: "background.paper",
-                opacity: 0.4,
-              },
+        <Box
+          sx={{
+            width: CARD_DECK.CARD_WIDTH + 24,
+            height: CARD_DECK.CARD_HEIGHT + 24,
+            position: "relative",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            touchAction: "pan-y pinch-zoom",
+          }}
+        >
+          <Swiper
+            onSwiper={(swiper) => {
+              swiperRef.current = swiper;
+            }}
+            onSlideChange={handleSlideChange}
+            effect="cards"
+            grabCursor
+            modules={[EffectCards]}
+            cardsEffect={{
+              perSlideOffset: 12,
+              perSlideRotate: 5,
+              rotate: true,
+              slideShadows: true,
+            }}
+            speed={300}
+            resistance={true}
+            resistanceRatio={0.7}
+            touchRatio={0.8}
+            threshold={10}
+            cssMode={false}
+            touchStartPreventDefault={false}
+            style={{
+              width: CARD_DECK.CARD_WIDTH,
+              height: CARD_DECK.CARD_HEIGHT,
             }}
           >
-            <ChevronLeftIcon />
-          </IconButton>
-
-          <Box
-            sx={{
-              width: CARD_DECK.CARD_WIDTH + 40,
-              height: CARD_DECK.CARD_HEIGHT + 20,
-              position: "relative",
-              display: "flex",
-              justifyContent: "center",
-            }}
-          >
-            <Box
-              sx={{
-                width: CARD_DECK.CARD_WIDTH,
-                height: CARD_DECK.CARD_HEIGHT,
-                position: "relative",
-              }}
-            >
-              <AnimatePresence mode="popLayout">
-                {visibleCards
-                  .map((card, index) => (
-                    <SwipeableCard
-                      key={card.id}
-                      card={card}
-                      isTop={index === 0}
-                      stackIndex={index}
-                      onSwipe={handleSwipe}
-                      onEdit={() => onEditCard(card)}
-                      onDelete={() => onDeleteCard(card)}
-                    />
-                  ))
-                  .reverse()}
-              </AnimatePresence>
-            </Box>
-          </Box>
-
-          <IconButton
-            onClick={handleNext}
-            disabled={cards.length <= 1}
-            sx={{
-              backgroundColor: "background.paper",
-              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-              "&:hover": { backgroundColor: "grey.100" },
-              "&:disabled": {
-                backgroundColor: "background.paper",
-                opacity: 0.4,
-              },
-            }}
-          >
-            <ChevronRightIcon />
-          </IconButton>
+            {cards.map((card) => (
+              <SwiperSlide
+                key={card.id}
+                style={{
+                  borderRadius: "16px",
+                  overflow: "hidden",
+                }}
+              >
+                <Card
+                  card={card}
+                  onEdit={() => onEditCard(card)}
+                  onDelete={() => onDeleteCard(card)}
+                />
+              </SwiperSlide>
+            ))}
+          </Swiper>
         </Box>
       ) : (
         <Box
@@ -232,18 +184,22 @@ export function CardDeck({
           {cards.map((card, index) => (
             <Box
               key={card.id}
-              onClick={() => setCurrentIndex(index)}
+              onClick={() => handleDotClick(index)}
+              onKeyDown={(e) => e.key === "Enter" && handleDotClick(index)}
+              role="button"
+              tabIndex={0}
+              aria-label={`Go to card ${index + 1}`}
               sx={{
-                width: index === safeCurrentIndex ? 16 : 8,
+                width: index === activeIndex ? 16 : 8,
                 height: 8,
                 borderRadius: "4px",
                 backgroundColor:
-                  index === safeCurrentIndex ? "primary.main" : "grey.300",
+                  index === activeIndex ? "primary.main" : "grey.300",
                 transition: "all 0.2s",
                 cursor: "pointer",
                 "&:hover": {
                   backgroundColor:
-                    index === safeCurrentIndex ? "primary.main" : "grey.400",
+                    index === activeIndex ? "primary.main" : "grey.400",
                 },
               }}
             />

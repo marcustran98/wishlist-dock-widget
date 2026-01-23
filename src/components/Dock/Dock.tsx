@@ -53,11 +53,17 @@ export function Dock() {
   const [updateCard] = useUpdateCardMutation();
   const [deleteCard] = useDeleteCardMutation();
 
-  // Confirm dialog state
+  // Confirm dialog state for stacks
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     stack: Stack | null;
   }>({ open: false, stack: null });
+
+  // Confirm dialog state for cards
+  const [cardConfirmDialog, setCardConfirmDialog] = useState<{
+    open: boolean;
+    card: Card | null;
+  }>({ open: false, card: null });
 
   const handleStackClick = (stackId: string) => {
     dispatch(setActiveStack(activeStackId === stackId ? null : stackId));
@@ -148,12 +154,24 @@ export function Dock() {
     }
   };
 
-  const handleDeleteCard = async (card: Card) => {
+  const handleDeleteCard = (card: Card) => {
+    setCardConfirmDialog({ open: true, card });
+  };
+
+  const handleConfirmDeleteCard = async () => {
+    if (!cardConfirmDialog.card) return;
+
     try {
-      await deleteCard(card.id);
+      await deleteCard(cardConfirmDialog.card.id);
     } catch (error) {
       console.error("Failed to delete card:", error);
+    } finally {
+      setCardConfirmDialog({ open: false, card: null });
     }
+  };
+
+  const handleCancelDeleteCard = () => {
+    setCardConfirmDialog({ open: false, card: null });
   };
 
   const filteredStacks = stacks.filter((stack) =>
@@ -226,6 +244,17 @@ export function Dock() {
         severity="error"
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
+      />
+
+      <ConfirmDialog
+        open={cardConfirmDialog.open}
+        title="Delete Card"
+        message={`Are you sure you want to delete "${cardConfirmDialog.card?.name}"?`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        severity="warning"
+        onConfirm={handleConfirmDeleteCard}
+        onCancel={handleCancelDeleteCard}
       />
     </>
   );

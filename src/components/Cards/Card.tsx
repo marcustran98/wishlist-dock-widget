@@ -56,10 +56,24 @@ export function Card({ card, onEdit, onDelete }: CardProps) {
           gap: 1,
         }}
       >
-        <ActionButton onClick={onEdit} size="small">
+        <ActionButton
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
+          size="small"
+          aria-label={`Edit ${card.name}`}
+        >
           <EditIcon fontSize="small" />
         </ActionButton>
-        <ActionButton onClick={onDelete} size="small">
+        <ActionButton
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          size="small"
+          aria-label={`Delete ${card.name}`}
+        >
           <DeleteIcon fontSize="small" />
         </ActionButton>
       </Box>
