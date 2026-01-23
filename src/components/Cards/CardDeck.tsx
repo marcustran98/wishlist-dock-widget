@@ -5,11 +5,10 @@ import AddIcon from "@mui/icons-material/Add";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { LAYOUT, Z_INDEX, CARD_DECK } from "@/constants";
-import { type Card as CardType } from "./Card";
+import type { Card as CardType } from "@/types";
 import { SwipeableCard } from "./SwipeableCard";
 
 interface CardDeckProps {
-  stackId: string;
   stackName: string;
   cards: CardType[];
   onClose: () => void;

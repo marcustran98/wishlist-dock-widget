@@ -9,7 +9,8 @@ import {
   type MotionValue,
 } from "framer-motion";
 import { CARD_DECK, ANIMATION, COLORS } from "@/constants";
-import { Card, type Card as CardType } from "./Card";
+import type { Card as CardType } from "@/types";
+import { Card } from "./Card";
 
 export interface SwipeableCardProps {
   card: CardType;

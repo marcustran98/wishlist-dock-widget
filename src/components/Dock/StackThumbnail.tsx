@@ -1,12 +1,6 @@
 import { Box, Typography, Badge } from "@mui/material";
 import { LAYOUT } from "@/constants";
-
-interface Stack {
-  id: string;
-  name: string;
-  coverUrl: string;
-  cardCount: number;
-}
+import type { Stack } from "@/types";
 
 interface StackThumbnailProps {
   stack: Stack;

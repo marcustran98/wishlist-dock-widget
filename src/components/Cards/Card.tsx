@@ -1,20 +1,22 @@
-import { Box, Typography, IconButton } from "@mui/material";
+import { Box, Typography, IconButton, styled } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { CARD_DECK } from "@/constants";
-
-export interface Card {
-  id: string;
-  name: string;
-  description?: string;
-  coverUrl: string;
-}
+import type { Card as CardType } from "@/types";
 
 interface CardProps {
-  card: Card;
+  card: CardType;
   onEdit: () => void;
   onDelete: () => void;
 }
+
+const ActionButton = styled(IconButton)({
+  backgroundColor: "rgba(255, 255, 255, 0.2)",
+  color: "white",
+  "&:hover": {
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+  },
+});
 
 export function Card({ card, onEdit, onDelete }: CardProps) {
   return (
@@ -54,32 +56,12 @@ export function Card({ card, onEdit, onDelete }: CardProps) {
           gap: 1,
         }}
       >
-        <IconButton
-          onClick={onEdit}
-          size="small"
-          sx={{
-            backgroundColor: "rgba(255, 255, 255, 0.2)",
-            color: "white",
-            "&:hover": {
-              backgroundColor: "rgba(255, 255, 255, 0.3)",
-            },
-          }}
-        >
+        <ActionButton onClick={onEdit} size="small">
           <EditIcon fontSize="small" />
-        </IconButton>
-        <IconButton
-          onClick={onDelete}
-          size="small"
-          sx={{
-            backgroundColor: "rgba(255, 255, 255, 0.2)",
-            color: "white",
-            "&:hover": {
-              backgroundColor: "rgba(255, 255, 255, 0.3)",
-            },
-          }}
-        >
+        </ActionButton>
+        <ActionButton onClick={onDelete} size="small">
           <DeleteIcon fontSize="small" />
-        </IconButton>
+        </ActionButton>
       </Box>
 
       {/* Card content */}

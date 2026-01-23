@@ -6,13 +6,7 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import { LAYOUT, Z_INDEX } from "@/constants";
 import { StackThumbnail } from "./StackThumbnail";
 import { SearchBar } from "./SearchBar";
-
-interface Stack {
-  id: string;
-  name: string;
-  coverUrl: string;
-  cardCount: number;
-}
+import type { Stack } from "@/types";
 
 interface DockExpandedProps {
   stacks: Stack[];
