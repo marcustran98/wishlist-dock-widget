@@ -1,75 +1,68 @@
-import { useState, useEffect } from "react";
 import { DockMinimized } from "./DockMinimized";
 import { DockExpanded } from "./DockExpanded";
 import { CardDeck } from "@/components/Cards";
 import { StackDialog, CardDialog } from "@/components/Dialogs";
-import { mockApi } from "@/utils/mockApi";
-import type { Stack, Card } from "@/types";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  setExpanded,
+  setActiveStack,
+  setSearchQuery,
+  setSearchOpen,
+  openStackDialog,
+  openCardDialog,
+  closeDialogs,
+} from "@/store/slices/uiSlice";
+import {
+  useGetStacksQuery,
+  useGetCardsQuery,
+  useCreateStackMutation,
+  useUpdateStackMutation,
+  useCreateCardMutation,
+  useUpdateCardMutation,
+  useDeleteCardMutation,
+} from "@/store/api/apiSlice";
+import type { Card } from "@/types";
 
 export function Dock() {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [activeStackId, setActiveStackId] = useState<string | null>(null);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const dispatch = useAppDispatch();
 
-  // Data state
-  const [stacks, setStacks] = useState<Stack[]>([]);
-  const [cards, setCards] = useState<Card[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // UI state from Redux
+  const {
+    isExpanded,
+    activeStackId,
+    searchQuery,
+    isSearchOpen,
+    stackDialogOpen,
+    cardDialogOpen,
+    editingStack,
+    editingCard,
+  } = useAppSelector((state) => state.ui);
 
-  // Dialog state
-  const [stackDialogOpen, setStackDialogOpen] = useState(false);
-  const [editingStack, setEditingStack] = useState<Stack | undefined>();
-  const [cardDialogOpen, setCardDialogOpen] = useState(false);
-  const [editingCard, setEditingCard] = useState<Card | undefined>();
+  // Data from RTK Query
+  const { data: stacks = [], isLoading: stacksLoading } = useGetStacksQuery();
+  const { data: cards = [], isLoading: cardsLoading } = useGetCardsQuery();
 
-  // Refresh stacks to get updated card counts
-  const refreshStacks = async () => {
-    const updatedStacks = await mockApi.getStacks();
-    setStacks(updatedStacks);
-  };
-
-  // Load initial data
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [stacksData, cardsData] = await Promise.all([
-          mockApi.getStacks(),
-          mockApi.getCards(),
-        ]);
-        setStacks(stacksData);
-        setCards(cardsData);
-      } catch (error) {
-        console.error("Failed to load data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadData();
-  }, []);
+  // Mutations
+  const [createStack] = useCreateStackMutation();
+  const [updateStack] = useUpdateStackMutation();
+  const [createCard] = useCreateCardMutation();
+  const [updateCard] = useUpdateCardMutation();
+  const [deleteCard] = useDeleteCardMutation();
 
   const handleStackClick = (stackId: string) => {
-    setActiveStackId((prev) => (prev === stackId ? null : stackId));
+    dispatch(setActiveStack(activeStackId === stackId ? null : stackId));
   };
 
   const handleAddStack = () => {
-    setEditingStack(undefined);
-    setStackDialogOpen(true);
+    dispatch(openStackDialog(undefined));
   };
 
   const handleSaveStack = async (name: string, coverUrl: string) => {
     try {
       if (editingStack) {
-        const updated = await mockApi.updateStack(editingStack.id, {
-          name,
-          coverUrl,
-        });
-        setStacks((prev) =>
-          prev.map((s) => (s.id === editingStack.id ? updated : s))
-        );
+        await updateStack({ id: editingStack.id, request: { name, coverUrl } });
       } else {
-        const newStack = await mockApi.createStack({ name, coverUrl });
-        setStacks((prev) => [...prev, newStack]);
+        await createStack({ name, coverUrl });
       }
     } catch (error) {
       console.error("Failed to save stack:", error);
@@ -77,18 +70,15 @@ export function Dock() {
   };
 
   const handleSearchClose = () => {
-    setIsSearchOpen(false);
-    setSearchQuery("");
+    dispatch(setSearchOpen(false));
   };
 
   const handleAddCard = () => {
-    setEditingCard(undefined);
-    setCardDialogOpen(true);
+    dispatch(openCardDialog(undefined));
   };
 
   const handleEditCard = (card: Card) => {
-    setEditingCard(card);
-    setCardDialogOpen(true);
+    dispatch(openCardDialog(card));
   };
 
   const handleSaveCard = async (data: {
@@ -99,25 +89,22 @@ export function Dock() {
   }) => {
     try {
       if (editingCard) {
-        const updated = await mockApi.updateCard(editingCard.id, {
-          name: data.name,
-          description: data.description || undefined,
-          coverUrl: data.coverUrl,
-          stackId: data.stackId,
+        await updateCard({
+          id: editingCard.id,
+          request: {
+            name: data.name,
+            description: data.description || undefined,
+            coverUrl: data.coverUrl,
+            stackId: data.stackId,
+          },
         });
-        setCards((prev) =>
-          prev.map((c) => (c.id === editingCard.id ? updated : c))
-        );
-        await refreshStacks();
       } else {
-        const newCard = await mockApi.createCard({
+        await createCard({
           name: data.name,
           description: data.description || undefined,
           coverUrl: data.coverUrl,
           stackId: data.stackId,
         });
-        setCards((prev) => [...prev, newCard]);
-        await refreshStacks();
       }
     } catch (error) {
       console.error("Failed to save card:", error);
@@ -126,9 +113,7 @@ export function Dock() {
 
   const handleDeleteCard = async (card: Card) => {
     try {
-      await mockApi.deleteCard(card.id);
-      setCards((prev) => prev.filter((c) => c.id !== card.id));
-      await refreshStacks();
+      await deleteCard(card.id);
     } catch (error) {
       console.error("Failed to delete card:", error);
     }
@@ -141,12 +126,14 @@ export function Dock() {
   const activeStack = stacks.find((s) => s.id === activeStackId);
   const activeStackCards = cards.filter((c) => c.stackId === activeStackId);
 
+  const isLoading = stacksLoading || cardsLoading;
+
   if (!isExpanded) {
-    return <DockMinimized onExpand={() => setIsExpanded(true)} />;
+    return <DockMinimized onExpand={() => dispatch(setExpanded(true))} />;
   }
 
   if (isLoading) {
-    return <DockMinimized onExpand={() => setIsExpanded(true)} />;
+    return <DockMinimized onExpand={() => dispatch(setExpanded(true))} />;
   }
 
   return (
@@ -156,7 +143,7 @@ export function Dock() {
           key={activeStackId}
           stackName={activeStack.name}
           cards={activeStackCards}
-          onClose={() => setActiveStackId(null)}
+          onClose={() => dispatch(setActiveStack(null))}
           onAddCard={handleAddCard}
           onEditCard={handleEditCard}
           onDeleteCard={handleDeleteCard}
@@ -167,24 +154,24 @@ export function Dock() {
         activeStackId={activeStackId}
         searchQuery={searchQuery}
         isSearchOpen={isSearchOpen}
-        onMinimize={() => setIsExpanded(false)}
+        onMinimize={() => dispatch(setExpanded(false))}
         onAddStack={handleAddStack}
         onStackClick={handleStackClick}
-        onSearchChange={setSearchQuery}
-        onSearchToggle={() => setIsSearchOpen(true)}
+        onSearchChange={(value) => dispatch(setSearchQuery(value))}
+        onSearchToggle={() => dispatch(setSearchOpen(true))}
         onSearchClose={handleSearchClose}
       />
 
       <StackDialog
         open={stackDialogOpen}
-        onClose={() => setStackDialogOpen(false)}
+        onClose={() => dispatch(closeDialogs())}
         stack={editingStack}
         onSave={handleSaveStack}
       />
 
       <CardDialog
         open={cardDialogOpen}
-        onClose={() => setCardDialogOpen(false)}
+        onClose={() => dispatch(closeDialogs())}
         card={editingCard}
         stacks={stacks}
         initialStackId={activeStackId ?? undefined}
