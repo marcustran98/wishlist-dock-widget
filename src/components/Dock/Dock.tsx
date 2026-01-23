@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { DockMinimized } from "./DockMinimized";
 import { DockExpanded } from "./DockExpanded";
 import { CardDeck } from "@/components/Cards";
 import { StackDialog, CardDialog } from "@/components/Dialogs";
+import { ConfirmDialog } from "@/components/common";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   setExpanded,
@@ -17,11 +19,12 @@ import {
   useGetCardsQuery,
   useCreateStackMutation,
   useUpdateStackMutation,
+  useDeleteStackMutation,
   useCreateCardMutation,
   useUpdateCardMutation,
   useDeleteCardMutation,
 } from "@/store/api/apiSlice";
-import type { Card } from "@/types";
+import type { Card, Stack } from "@/types";
 
 export function Dock() {
   const dispatch = useAppDispatch();
@@ -45,9 +48,16 @@ export function Dock() {
   // Mutations
   const [createStack] = useCreateStackMutation();
   const [updateStack] = useUpdateStackMutation();
+  const [deleteStack] = useDeleteStackMutation();
   const [createCard] = useCreateCardMutation();
   const [updateCard] = useUpdateCardMutation();
   const [deleteCard] = useDeleteCardMutation();
+
+  // Confirm dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    stack: Stack | null;
+  }>({ open: false, stack: null });
 
   const handleStackClick = (stackId: string) => {
     dispatch(setActiveStack(activeStackId === stackId ? null : stackId));
@@ -67,6 +77,33 @@ export function Dock() {
     } catch (error) {
       console.error("Failed to save stack:", error);
     }
+  };
+
+  const handleEditStack = (stack: Stack) => {
+    dispatch(openStackDialog(stack));
+  };
+
+  const handleDeleteStack = (stack: Stack) => {
+    setConfirmDialog({ open: true, stack });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!confirmDialog.stack) return;
+
+    try {
+      await deleteStack(confirmDialog.stack.id);
+      if (activeStackId === confirmDialog.stack.id) {
+        dispatch(setActiveStack(null));
+      }
+    } catch (error) {
+      console.error("Failed to delete stack:", error);
+    } finally {
+      setConfirmDialog({ open: false, stack: null });
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setConfirmDialog({ open: false, stack: null });
   };
 
   const handleSearchClose = () => {
@@ -157,6 +194,8 @@ export function Dock() {
         onMinimize={() => dispatch(setExpanded(false))}
         onAddStack={handleAddStack}
         onStackClick={handleStackClick}
+        onEditStack={handleEditStack}
+        onDeleteStack={handleDeleteStack}
         onSearchChange={(value) => dispatch(setSearchQuery(value))}
         onSearchToggle={() => dispatch(setSearchOpen(true))}
         onSearchClose={handleSearchClose}
@@ -176,6 +215,17 @@ export function Dock() {
         stacks={stacks}
         initialStackId={activeStackId ?? undefined}
         onSave={handleSaveCard}
+      />
+
+      <ConfirmDialog
+        open={confirmDialog.open}
+        title="Delete Stack"
+        message={`Are you sure you want to delete "${confirmDialog.stack?.name}"? This will also delete all cards in this stack.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        severity="error"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
       />
     </>
   );

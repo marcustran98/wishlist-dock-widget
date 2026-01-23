@@ -66,7 +66,7 @@ export function SwipeableCard({
   const dragRotate = useTransform(
     x,
     CARD_DECK.DRAG_RANGE as unknown as number[],
-    CARD_DECK.DRAG_ROTATION_RANGE as unknown as number[]
+    CARD_DECK.DRAG_ROTATION_RANGE as unknown as number[],
   );
   const likeOpacity = useTransform(x, [0, CARD_DECK.SWIPE_THRESHOLD], [0, 1]);
   const passOpacity = useTransform(x, [-CARD_DECK.SWIPE_THRESHOLD, 0], [1, 0]);

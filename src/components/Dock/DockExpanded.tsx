@@ -16,6 +16,8 @@ interface DockExpandedProps {
   onMinimize: () => void;
   onAddStack: () => void;
   onStackClick: (stackId: string) => void;
+  onEditStack: (stack: Stack) => void;
+  onDeleteStack: (stack: Stack) => void;
   onSearchChange: (value: string) => void;
   onSearchToggle: () => void;
   onSearchClose: () => void;
@@ -29,6 +31,8 @@ export function DockExpanded({
   onMinimize,
   onAddStack,
   onStackClick,
+  onEditStack,
+  onDeleteStack,
   onSearchChange,
   onSearchToggle,
   onSearchClose,
@@ -91,6 +95,8 @@ export function DockExpanded({
             stack={stack}
             isActive={activeStackId === stack.id}
             onClick={() => onStackClick(stack.id)}
+            onEdit={() => onEditStack(stack)}
+            onDelete={() => onDeleteStack(stack)}
           />
         ))}
         {stacks.length === 0 && (

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Box, Typography, IconButton, Button } from "@mui/material";
+import { AnimatePresence } from "framer-motion";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
@@ -163,19 +164,21 @@ export function CardDeck({
                 position: "relative",
               }}
             >
-              {visibleCards
-                .map((card, index) => (
-                  <SwipeableCard
-                    key={card.id}
-                    card={card}
-                    isTop={index === 0}
-                    stackIndex={index}
-                    onSwipe={handleSwipe}
-                    onEdit={() => onEditCard(card)}
-                    onDelete={() => onDeleteCard(card)}
-                  />
-                ))
-                .reverse()}
+              <AnimatePresence mode="popLayout">
+                {visibleCards
+                  .map((card, index) => (
+                    <SwipeableCard
+                      key={card.id}
+                      card={card}
+                      isTop={index === 0}
+                      stackIndex={index}
+                      onSwipe={handleSwipe}
+                      onEdit={() => onEditCard(card)}
+                      onDelete={() => onDeleteCard(card)}
+                    />
+                  ))
+                  .reverse()}
+              </AnimatePresence>
             </Box>
           </Box>
 
