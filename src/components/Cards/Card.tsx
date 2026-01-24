@@ -1,6 +1,7 @@
 import { Box, Typography, IconButton, styled } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import OpenWithIcon from "@mui/icons-material/OpenWith";
 import { CARD_DECK } from "@/constants";
 import type { Card as CardType } from "@/types";
 
@@ -8,6 +9,7 @@ interface CardProps {
   card: CardType;
   onEdit: () => void;
   onDelete: () => void;
+  onDragHandlePointerDown?: (e: React.PointerEvent) => void;
 }
 
 const ActionButton = styled(IconButton)({
@@ -18,7 +20,12 @@ const ActionButton = styled(IconButton)({
   },
 });
 
-export function Card({ card, onEdit, onDelete }: CardProps) {
+export function Card({
+  card,
+  onEdit,
+  onDelete,
+  onDragHandlePointerDown,
+}: CardProps) {
   return (
     <Box
       sx={{
@@ -77,6 +84,42 @@ export function Card({ card, onEdit, onDelete }: CardProps) {
           <DeleteIcon fontSize="small" />
         </ActionButton>
       </Box>
+
+      {/* Drag handle */}
+      {onDragHandlePointerDown && (
+        <Box
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            onDragHandlePointerDown(e);
+          }}
+          sx={{
+            position: "absolute",
+            bottom: 80,
+            left: "50%",
+            transform: "translateX(-50%)",
+            backgroundColor: "rgba(255, 255, 255, 0.3)",
+            borderRadius: "8px",
+            padding: "6px 20px",
+            cursor: "grab",
+            touchAction: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "background-color 0.2s",
+            "&:hover": {
+              backgroundColor: "rgba(255, 255, 255, 0.5)",
+              transform: "translateX(-50%) scale(1.05)",
+            },
+            "&:active": {
+              cursor: "grabbing",
+              transform: "translateX(-50%) scale(0.98)",
+            },
+          }}
+        >
+          <OpenWithIcon sx={{ color: "white", fontSize: 18 }} />
+        </Box>
+      )}
 
       {/* Card content */}
       <Box

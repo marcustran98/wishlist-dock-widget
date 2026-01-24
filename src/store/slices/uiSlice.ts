@@ -58,21 +58,6 @@ const uiSlice = createSlice({
       state.editingStack = undefined;
       state.editingCard = undefined;
     },
-    setEditingStack(state, action: PayloadAction<Stack | undefined>) {
-      state.editingStack = action.payload;
-    },
-    setEditingCard(state, action: PayloadAction<Card | undefined>) {
-      state.editingCard = action.payload;
-    },
-    showNotification(state, action: PayloadAction<Omit<Notification, "id">>) {
-      state.notification = {
-        id: Date.now().toString(),
-        ...action.payload,
-      };
-    },
-    hideNotification(state) {
-      state.notification = null;
-    },
   },
 });
 
@@ -84,10 +69,6 @@ export const {
   openStackDialog,
   openCardDialog,
   closeDialogs,
-  setEditingStack,
-  setEditingCard,
-  showNotification,
-  hideNotification,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

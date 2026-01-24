@@ -1,7 +1,7 @@
 import { useState, useDeferredValue } from "react";
 import { DockMinimized } from "./DockMinimized";
 import { DockExpanded } from "./DockExpanded";
-import { CardDeck } from "@/components/Cards";
+import { CardDeck, DragOverlay } from "@/components/Cards";
 import { StackDialog, CardDialog } from "@/components/Dialogs";
 import { ConfirmDialog } from "@/components/common";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -174,6 +174,19 @@ export function Dock() {
     setCardConfirmDialog({ open: false, card: null });
   };
 
+  const handleCardDrop = async (card: Card, targetStackId: string) => {
+    if (card.stackId === targetStackId) return;
+
+    try {
+      await updateCard({
+        id: card.id,
+        request: { stackId: targetStackId },
+      });
+    } catch (error) {
+      console.error("Failed to move card:", error);
+    }
+  };
+
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
   const filteredStacks = stacks.filter((stack) =>
@@ -204,6 +217,7 @@ export function Dock() {
           onAddCard={handleAddCard}
           onEditCard={handleEditCard}
           onDeleteCard={handleDeleteCard}
+          onCardDrop={handleCardDrop}
         />
       )}
       <DockExpanded
@@ -220,6 +234,8 @@ export function Dock() {
         onSearchToggle={() => dispatch(setSearchOpen(true))}
         onSearchClose={handleSearchClose}
       />
+
+      <DragOverlay />
 
       <StackDialog
         open={stackDialogOpen}

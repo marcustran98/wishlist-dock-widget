@@ -9,6 +9,7 @@ export const Z_INDEX = {
   DOCK: 1000,
   CARD_DECK: 999,
   DIALOG: 1100,
+  DRAG_OVERLAY: 1200,
 } as const;
 
 export const GRADIENTS = [

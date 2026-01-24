@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -20,21 +20,36 @@ import type { Stack } from "@/types";
 interface StackThumbnailProps {
   stack: Stack;
   isActive: boolean;
+  isDropTarget?: boolean;
+  isHoveredDuringDrag?: boolean;
   onClick: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onRegisterDropZone?: (stackId: string, element: HTMLElement | null) => void;
 }
 
 export function StackThumbnail({
   stack,
   isActive,
+  isDropTarget = false,
+  isHoveredDuringDrag = false,
   onClick,
   onEdit,
   onDelete,
+  onRegisterDropZone,
 }: StackThumbnailProps) {
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
+  const thumbnailRef = useRef<HTMLDivElement>(null);
+
+  // Register this element as a drop zone
+  useEffect(() => {
+    onRegisterDropZone?.(stack.id, thumbnailRef.current);
+    return () => {
+      onRegisterDropZone?.(stack.id, null);
+    };
+  }, [stack.id, onRegisterDropZone]);
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
@@ -86,17 +101,39 @@ export function StackThumbnail({
         }}
       >
         <Box
+          ref={thumbnailRef}
           sx={{
             width: LAYOUT.THUMBNAIL_SIZE,
             height: LAYOUT.THUMBNAIL_SIZE,
             borderRadius: "8px",
             background: stack.coverUrl,
             border: isActive ? "2px solid" : "2px solid transparent",
-            borderColor: isActive ? "primary.main" : "transparent",
-            transition: "border-color 0.2s, transform 0.2s",
+            borderColor: isActive
+              ? "primary.main"
+              : isHoveredDuringDrag
+                ? "primary.main"
+                : isDropTarget
+                  ? alpha(theme.palette.primary.main, 0.5)
+                  : "transparent",
+            transition:
+              "border-color 0.2s, transform 0.2s, box-shadow 0.2s",
             position: "relative",
+            transform: isHoveredDuringDrag
+              ? "scale(1.15)"
+              : isDropTarget
+                ? "scale(1.08)"
+                : "scale(1)",
+            boxShadow: isHoveredDuringDrag
+              ? `0 0 0 3px ${alpha(theme.palette.primary.main, 0.4)}, 0 0 16px ${alpha(theme.palette.primary.main, 0.3)}`
+              : isDropTarget
+                ? `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`
+                : "none",
             "&:hover": {
-              transform: "scale(1.05)",
+              transform: isHoveredDuringDrag
+                ? "scale(1.15)"
+                : isDropTarget
+                  ? "scale(1.1)"
+                  : "scale(1.05)",
             },
           }}
         >

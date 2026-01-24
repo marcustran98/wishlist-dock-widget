@@ -1,13 +1,14 @@
-import { useRef, useState, memo } from "react";
+import { useRef, useState, memo, useEffect } from "react";
 import { Box, Typography, IconButton, Button } from "@mui/material";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { EffectCards } from "swiper/modules";
-import { Card } from "./Card";
+import { DraggableCard } from "./DraggableCard";
 import type { Swiper as SwiperType } from "swiper";
 import { LAYOUT, Z_INDEX, CARD_DECK } from "@/constants";
 import type { Card as CardType } from "@/types";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
+import { useAppSelector } from "@/store/hooks";
 
 import "swiper/css";
 import "swiper/css/effect-cards";
@@ -19,6 +20,7 @@ interface CardDeckProps {
   onAddCard: () => void;
   onEditCard: (card: CardType) => void;
   onDeleteCard: (card: CardType) => void;
+  onCardDrop?: (card: CardType, targetStackId: string) => void;
 }
 
 export const CardDeck = memo(function CardDeck({
@@ -28,9 +30,18 @@ export const CardDeck = memo(function CardDeck({
   onAddCard,
   onEditCard,
   onDeleteCard,
+  onCardDrop,
 }: CardDeckProps) {
   const swiperRef = useRef<SwiperType | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const { isDragging } = useAppSelector((state) => state.drag);
+
+  // Disable Swiper touch when dragging a card
+  useEffect(() => {
+    if (swiperRef.current) {
+      swiperRef.current.allowTouchMove = !isDragging;
+    }
+  }, [isDragging]);
 
   const handleSlideChange = (swiper: SwiperType) => {
     setActiveIndex(swiper.activeIndex);
@@ -141,10 +152,11 @@ export const CardDeck = memo(function CardDeck({
                   overflow: "hidden",
                 }}
               >
-                <Card
+                <DraggableCard
                   card={card}
                   onEdit={() => onEditCard(card)}
                   onDelete={() => onDeleteCard(card)}
+                  onDrop={onCardDrop}
                 />
               </SwiperSlide>
             ))}

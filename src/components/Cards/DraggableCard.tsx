@@ -1,0 +1,125 @@
+import { useRef, useEffect } from "react";
+import { Box } from "@mui/material";
+import { Card } from "./Card";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  startDrag,
+  updateDragPosition,
+  endDrag,
+} from "@/store/slices/dragSlice";
+import { CARD_DECK } from "@/constants";
+import type { Card as CardType } from "@/types";
+
+interface DraggableCardProps {
+  card: CardType;
+  onEdit: () => void;
+  onDelete: () => void;
+  onDrop?: (card: CardType, targetStackId: string) => void;
+}
+
+export function DraggableCard({
+  card,
+  onEdit,
+  onDelete,
+  onDrop,
+}: DraggableCardProps) {
+  const dispatch = useAppDispatch();
+  const { isDragging, draggedCard, hoveredStackId } = useAppSelector(
+    (state) => state.drag,
+  );
+
+  const isBeingDragged = isDragging && draggedCard?.id === card.id;
+
+  const handleDragHandlePointerDown = (e: React.PointerEvent) => {
+    dispatch(startDrag(card));
+    dispatch(updateDragPosition({ x: e.clientX, y: e.clientY }));
+  };
+
+  // Keep refs for latest values to avoid stale closures in global event handlers
+  const hoveredStackIdRef = useRef(hoveredStackId);
+  const onDropRef = useRef(onDrop);
+
+  useEffect(() => {
+    hoveredStackIdRef.current = hoveredStackId;
+  }, [hoveredStackId]);
+
+  useEffect(() => {
+    onDropRef.current = onDrop;
+  }, [onDrop]);
+
+  // Global pointer events for tracking drag movement and release
+  useEffect(() => {
+    if (!isDragging || !isBeingDragged) return;
+
+    const handleGlobalMove = (e: PointerEvent) => {
+      dispatch(updateDragPosition({ x: e.clientX, y: e.clientY }));
+    };
+
+    const handleGlobalUp = () => {
+      // Check if we're over a valid drop target before ending drag
+      const targetStackId = hoveredStackIdRef.current;
+      if (
+        targetStackId &&
+        targetStackId !== card.stackId &&
+        onDropRef.current
+      ) {
+        onDropRef.current(card, targetStackId);
+      }
+      dispatch(endDrag());
+    };
+
+    window.addEventListener("pointermove", handleGlobalMove);
+    window.addEventListener("pointerup", handleGlobalUp);
+    window.addEventListener("pointercancel", handleGlobalUp);
+
+    return () => {
+      window.removeEventListener("pointermove", handleGlobalMove);
+      window.removeEventListener("pointerup", handleGlobalUp);
+      window.removeEventListener("pointercancel", handleGlobalUp);
+    };
+  }, [isDragging, isBeingDragged, dispatch, card]);
+
+  return (
+    <Box
+      sx={{
+        width: CARD_DECK.CARD_WIDTH,
+        height: CARD_DECK.CARD_HEIGHT,
+        position: "relative",
+      }}
+    >
+      <Box
+        sx={{
+          width: "100%",
+          height: "100%",
+          opacity: isBeingDragged ? 0.4 : 1,
+          transition: "opacity 0.2s",
+        }}
+      >
+        <Card
+          card={card}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onDragHandlePointerDown={handleDragHandlePointerDown}
+        />
+      </Box>
+
+      {/* Ghost placeholder when dragging */}
+      {isBeingDragged && (
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            borderRadius: "16px",
+            border: "2px dashed",
+            borderColor: "primary.main",
+            backgroundColor: "rgba(25, 118, 210, 0.08)",
+            pointerEvents: "none",
+          }}
+        />
+      )}
+    </Box>
+  );
+}

@@ -1,3 +1,4 @@
+import { useRef, useEffect } from "react";
 import { Box, Paper, IconButton, Typography } from "@mui/material";
 import StarIcon from "@mui/icons-material/Star";
 import AddIcon from "@mui/icons-material/Add";
@@ -6,6 +7,8 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import { LAYOUT, Z_INDEX } from "@/constants";
 import { StackThumbnail } from "./StackThumbnail";
 import { SearchBar } from "./SearchBar";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { setHoveredStack } from "@/store/slices/dragSlice";
 import type { Stack } from "@/types";
 
 interface DockExpandedProps {
@@ -37,6 +40,50 @@ export function DockExpanded({
   onSearchToggle,
   onSearchClose,
 }: DockExpandedProps) {
+  const dispatch = useAppDispatch();
+  const { isDragging, sourceStackId, hoveredStackId, dragPosition } =
+    useAppSelector((state) => state.drag);
+  const dropZonesRef = useRef<Map<string, HTMLElement>>(new Map());
+
+  const handleRegisterDropZone = (stackId: string, element: HTMLElement | null) => {
+    if (element) {
+      dropZonesRef.current.set(stackId, element);
+    } else {
+      dropZonesRef.current.delete(stackId);
+    }
+  };
+
+  // Check which stack is being hovered during drag
+  useEffect(() => {
+    if (!isDragging || !dragPosition) {
+      if (hoveredStackId) {
+        dispatch(setHoveredStack(null));
+      }
+      return;
+    }
+
+    let foundStackId: string | null = null;
+
+    dropZonesRef.current.forEach((element, stackId) => {
+      // Skip the source stack
+      if (stackId === sourceStackId) return;
+
+      const rect = element.getBoundingClientRect();
+      if (
+        dragPosition.x >= rect.left &&
+        dragPosition.x <= rect.right &&
+        dragPosition.y >= rect.top &&
+        dragPosition.y <= rect.bottom
+      ) {
+        foundStackId = stackId;
+      }
+    });
+
+    if (foundStackId !== hoveredStackId) {
+      dispatch(setHoveredStack(foundStackId));
+    }
+  }, [isDragging, dragPosition, sourceStackId, hoveredStackId, dispatch]);
+
   return (
     <Paper
       elevation={8}
@@ -94,9 +141,12 @@ export function DockExpanded({
             key={stack.id}
             stack={stack}
             isActive={activeStackId === stack.id}
+            isDropTarget={isDragging && sourceStackId !== stack.id}
+            isHoveredDuringDrag={hoveredStackId === stack.id}
             onClick={() => onStackClick(stack.id)}
             onEdit={() => onEditStack(stack)}
             onDelete={() => onDeleteStack(stack)}
+            onRegisterDropZone={handleRegisterDropZone}
           />
         ))}
         {stacks.length === 0 && (

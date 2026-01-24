@@ -1,10 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
 import uiReducer from "./slices/uiSlice";
+import dragReducer from "./slices/dragSlice";
 import { apiSlice } from "./api/apiSlice";
 
 export const store = configureStore({
   reducer: {
     ui: uiReducer,
+    drag: dragReducer,
     [apiSlice.reducerPath]: apiSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>
