@@ -6,7 +6,6 @@ import type {
   CreateCardRequest,
   UpdateCardRequest,
 } from "@/types";
-import { GRADIENTS } from "@/constants";
 
 const STORAGE_KEY = "wishlist-dock-data";
 
@@ -29,105 +28,23 @@ interface StorageData {
   cards: Card[];
 }
 
-// Seed data
+// Initial empty data (no seed data)
 function getSeedData(): StorageData {
-  const timestamp = now();
-  const stacks: Stack[] = [
-    {
-      id: "1",
-      name: "Favorites",
-      coverUrl: GRADIENTS[0],
-      cardCount: 3,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    },
-    {
-      id: "2",
-      name: "Read Later",
-      coverUrl: GRADIENTS[1],
-      cardCount: 2,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    },
-    {
-      id: "3",
-      name: "Shopping",
-      coverUrl: GRADIENTS[2],
-      cardCount: 1,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    },
-  ];
-
-  const cards: Card[] = [
-    {
-      id: "c1",
-      stackId: "1",
-      name: "Beautiful Sunset",
-      description: "A stunning view of the sunset over the mountains",
-      coverUrl: "https://picsum.photos/seed/sunset/280/400",
-      position: 0,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    },
-    {
-      id: "c2",
-      stackId: "1",
-      name: "City Lights",
-      description: "Night view of the city skyline",
-      coverUrl: "https://picsum.photos/seed/city/280/400",
-      position: 1,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    },
-    {
-      id: "c3",
-      stackId: "1",
-      name: "Ocean Waves",
-      description: "Peaceful beach scene with rolling waves",
-      coverUrl: "https://picsum.photos/seed/ocean/280/400",
-      position: 2,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    },
-    {
-      id: "c4",
-      stackId: "2",
-      name: "Forest Trail",
-      coverUrl: "https://picsum.photos/seed/forest/280/400",
-      position: 0,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    },
-    {
-      id: "c5",
-      stackId: "2",
-      name: "Mountain Peak",
-      description: "Snow-capped mountain at sunrise",
-      coverUrl: "https://picsum.photos/seed/mountain/280/400",
-      position: 1,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    },
-    {
-      id: "c6",
-      stackId: "3",
-      name: "Desert Dunes",
-      coverUrl: "https://picsum.photos/seed/desert/280/400",
-      position: 0,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    },
-  ];
-
-  return { stacks, cards };
+  return { stacks: [], cards: [] };
 }
 
 function loadFromStorage(): StorageData {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      return JSON.parse(stored) as StorageData;
+      const parsed = JSON.parse(stored) as StorageData;
+      // Validate data structure
+      if (!Array.isArray(parsed.stacks)) parsed.stacks = [];
+      if (!Array.isArray(parsed.cards)) parsed.cards = [];
+      // Remove orphaned cards (cards with non-existent stackId)
+      const stackIds = new Set(parsed.stacks.map((s) => s.id));
+      parsed.cards = parsed.cards.filter((c) => stackIds.has(c.stackId));
+      return parsed;
     }
   } catch (e) {
     console.error("Failed to load from localStorage:", e);
@@ -143,13 +60,24 @@ function saveToStorage(data: StorageData): void {
   }
 }
 
-// Initialize data
+// Ensure cardCount matches actual cards in each stack
+function syncStackCardCounts(): void {
+  data.stacks.forEach((stack) => {
+    const actualCount = data.cards.filter((c) => c.stackId === stack.id).length;
+    stack.cardCount = actualCount;
+  });
+}
+
+// Initialize data and sync card counts
 let data: StorageData = loadFromStorage();
+syncStackCardCounts();
+saveToStorage(data);
 
 // Stack methods
 async function getStacks(): Promise<Stack[]> {
   await delay();
-  return [...data.stacks];
+  // Return deep copies to prevent RTK Query from freezing our internal state
+  return data.stacks.map((stack) => ({ ...stack }));
 }
 
 async function createStack(request: CreateStackRequest): Promise<Stack> {
@@ -164,7 +92,7 @@ async function createStack(request: CreateStackRequest): Promise<Stack> {
   };
   data.stacks.push(stack);
   saveToStorage(data);
-  return stack;
+  return { ...stack };
 }
 
 async function updateStack(
@@ -182,7 +110,7 @@ async function updateStack(
     updatedAt: now(),
   };
   saveToStorage(data);
-  return data.stacks[index];
+  return { ...data.stacks[index] };
 }
 
 async function deleteStack(id: string): Promise<void> {
@@ -200,16 +128,25 @@ async function deleteStack(id: string): Promise<void> {
 // Card methods
 async function getCards(stackId?: string): Promise<Card[]> {
   await delay();
+  // Return deep copies to prevent RTK Query from freezing our internal state
   if (stackId) {
     return data.cards
       .filter((c) => c.stackId === stackId)
-      .sort((a, b) => a.position - b.position);
+      .sort((a, b) => a.position - b.position)
+      .map((card) => ({ ...card }));
   }
-  return [...data.cards];
+  return data.cards.map((card) => ({ ...card }));
 }
 
 async function createCard(request: CreateCardRequest): Promise<Card> {
   await delay();
+
+  // Validate stack exists
+  const stackIndex = data.stacks.findIndex((s) => s.id === request.stackId);
+  if (stackIndex === -1) {
+    throw new Error(`Stack not found: ${request.stackId}`);
+  }
+
   const stackCards = data.cards.filter((c) => c.stackId === request.stackId);
   const maxPosition = stackCards.reduce(
     (max, c) => Math.max(max, c.position),
@@ -228,15 +165,13 @@ async function createCard(request: CreateCardRequest): Promise<Card> {
   };
   data.cards.push(card);
 
-  // Update stack card count
-  const stackIndex = data.stacks.findIndex((s) => s.id === request.stackId);
-  if (stackIndex !== -1) {
-    data.stacks[stackIndex].cardCount++;
-    data.stacks[stackIndex].updatedAt = now();
-  }
+  // Update stack card count (safe increment)
+  data.stacks[stackIndex].cardCount =
+    (data.stacks[stackIndex].cardCount || 0) + 1;
+  data.stacks[stackIndex].updatedAt = now();
 
   saveToStorage(data);
-  return card;
+  return { ...card };
 }
 
 async function updateCard(
@@ -252,19 +187,25 @@ async function updateCard(
   const oldCard = data.cards[index];
   const newStackId = request.stackId ?? oldCard.stackId;
 
-  // If moving to different stack, update card counts
+  // If moving to different stack, update card counts safely
   if (request.stackId && request.stackId !== oldCard.stackId) {
     const oldStackIndex = data.stacks.findIndex(
       (s) => s.id === oldCard.stackId
     );
-    const newStackIndex = data.stacks.findIndex((s) => s.id === request.stackId);
+    const newStackIndex = data.stacks.findIndex(
+      (s) => s.id === request.stackId
+    );
 
     if (oldStackIndex !== -1) {
-      data.stacks[oldStackIndex].cardCount--;
+      data.stacks[oldStackIndex].cardCount = Math.max(
+        0,
+        (data.stacks[oldStackIndex].cardCount || 0) - 1
+      );
       data.stacks[oldStackIndex].updatedAt = now();
     }
     if (newStackIndex !== -1) {
-      data.stacks[newStackIndex].cardCount++;
+      data.stacks[newStackIndex].cardCount =
+        (data.stacks[newStackIndex].cardCount || 0) + 1;
       data.stacks[newStackIndex].updatedAt = now();
     }
   }
@@ -277,7 +218,7 @@ async function updateCard(
   };
 
   saveToStorage(data);
-  return data.cards[index];
+  return { ...data.cards[index] };
 }
 
 async function deleteCard(id: string): Promise<void> {
@@ -289,10 +230,13 @@ async function deleteCard(id: string): Promise<void> {
 
   const card = data.cards[index];
 
-  // Update stack card count
+  // Update stack card count (prevent negative)
   const stackIndex = data.stacks.findIndex((s) => s.id === card.stackId);
   if (stackIndex !== -1) {
-    data.stacks[stackIndex].cardCount--;
+    data.stacks[stackIndex].cardCount = Math.max(
+      0,
+      (data.stacks[stackIndex].cardCount || 0) - 1
+    );
     data.stacks[stackIndex].updatedAt = now();
   }
 

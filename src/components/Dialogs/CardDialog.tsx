@@ -53,7 +53,7 @@ function CardDialogForm({
   const [description, setDescription] = useState(card?.description ?? "");
   const [coverUrl, setCoverUrl] = useState(card?.coverUrl ?? "");
   const [stackId, setStackId] = useState(
-    card?.stackId ?? initialStackId ?? stacks[0]?.id ?? ""
+    card?.stackId ?? initialStackId ?? stacks[0]?.id ?? "",
   );
 
   const handleRandomImage = () => {

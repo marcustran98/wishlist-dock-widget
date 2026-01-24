@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Provider } from "react-redux";
-import { ThemeProvider, CssBaseline, Typography, Box, IconButton } from "@mui/material";
-import DarkModeIcon from "@mui/icons-material/DarkMode";
-import LightModeIcon from "@mui/icons-material/LightMode";
+import { ThemeProvider, CssBaseline, IconButton } from "@mui/material";
 import { store } from "@/store";
 import { createAppTheme } from "@/theme";
 import { Dock } from "@/components/Dock";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import LightModeIcon from "@mui/icons-material/LightMode";
 
 function App() {
   const [mode, setMode] = useState<"light" | "dark">("light");
@@ -35,18 +35,6 @@ function App() {
         >
           {mode === "light" ? <DarkModeIcon /> : <LightModeIcon />}
         </IconButton>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            minHeight: "100vh",
-          }}
-        >
-          <Typography variant="h6" color="text.secondary">
-            Click the dock button below
-          </Typography>
-        </Box>
         <Dock />
       </ThemeProvider>
     </Provider>

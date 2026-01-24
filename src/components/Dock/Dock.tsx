@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useDeferredValue } from "react";
 import { DockMinimized } from "./DockMinimized";
 import { DockExpanded } from "./DockExpanded";
 import { CardDeck } from "@/components/Cards";
@@ -29,7 +29,6 @@ import type { Card, Stack } from "@/types";
 export function Dock() {
   const dispatch = useAppDispatch();
 
-  // UI state from Redux
   const {
     isExpanded,
     activeStackId,
@@ -41,11 +40,9 @@ export function Dock() {
     editingCard,
   } = useAppSelector((state) => state.ui);
 
-  // Data from RTK Query
   const { data: stacks = [], isLoading: stacksLoading } = useGetStacksQuery();
   const { data: cards = [], isLoading: cardsLoading } = useGetCardsQuery();
 
-  // Mutations
   const [createStack] = useCreateStackMutation();
   const [updateStack] = useUpdateStackMutation();
   const [deleteStack] = useDeleteStackMutation();
@@ -53,7 +50,6 @@ export function Dock() {
   const [updateCard] = useUpdateCardMutation();
   const [deleteCard] = useDeleteCardMutation();
 
-  // Confirm dialog state for stacks
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     stack: Stack | null;
@@ -158,11 +154,15 @@ export function Dock() {
     setCardConfirmDialog({ open: true, card });
   };
 
+  const handleCloseCardDeck = () => {
+    dispatch(setActiveStack(null));
+  };
+
   const handleConfirmDeleteCard = async () => {
     if (!cardConfirmDialog.card) return;
 
     try {
-      await deleteCard(cardConfirmDialog.card.id);
+      await deleteCard(cardConfirmDialog.card.id).unwrap();
     } catch (error) {
       console.error("Failed to delete card:", error);
     } finally {
@@ -174,8 +174,10 @@ export function Dock() {
     setCardConfirmDialog({ open: false, card: null });
   };
 
+  const deferredSearchQuery = useDeferredValue(searchQuery);
+
   const filteredStacks = stacks.filter((stack) =>
-    stack.name.toLowerCase().includes(searchQuery.toLowerCase())
+    stack.name.toLowerCase().includes(deferredSearchQuery.toLowerCase()),
   );
 
   const activeStack = stacks.find((s) => s.id === activeStackId);
@@ -193,12 +195,12 @@ export function Dock() {
 
   return (
     <>
-      {activeStackId && activeStack && (
+      {activeStackId && activeStack && !cardDialogOpen && (
         <CardDeck
           key={activeStackId}
           stackName={activeStack.name}
           cards={activeStackCards}
-          onClose={() => dispatch(setActiveStack(null))}
+          onClose={handleCloseCardDeck}
           onAddCard={handleAddCard}
           onEditCard={handleEditCard}
           onDeleteCard={handleDeleteCard}

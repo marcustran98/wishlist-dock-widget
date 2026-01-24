@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, memo } from "react";
 import { Box, Typography, IconButton, Button } from "@mui/material";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { EffectCards } from "swiper/modules";
@@ -21,7 +21,7 @@ interface CardDeckProps {
   onDeleteCard: (card: CardType) => void;
 }
 
-export function CardDeck({
+export const CardDeck = memo(function CardDeck({
   stackName,
   cards,
   onClose,
@@ -208,4 +208,4 @@ export function CardDeck({
       )}
     </Box>
   );
-}
+});

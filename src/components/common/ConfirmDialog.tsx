@@ -7,7 +7,7 @@ import {
   Typography,
   Box,
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
+import { alpha, useTheme } from "@mui/material/styles";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
@@ -32,6 +32,8 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const theme = useTheme();
+
   const Icon = severity === "error" ? ErrorOutlineIcon : WarningAmberIcon;
   const color = severity === "error" ? "error" : "warning";
 
@@ -41,17 +43,17 @@ export function ConfirmDialog({
       onClose={onCancel}
       maxWidth="xs"
       fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 3,
-          overflow: "hidden",
-        },
-      }}
+      sx={{ zIndex: 1400 }}
       slotProps={{
+        paper: {
+          sx: {
+            borderRadius: 3,
+            overflow: "hidden",
+          },
+        },
         backdrop: {
           sx: {
-            backgroundColor: (theme) =>
-              alpha(theme.palette.common.black, 0.5),
+            backgroundColor: alpha(theme.palette.common.black, 0.5),
             backdropFilter: "blur(4px)",
           },
         },
@@ -67,8 +69,7 @@ export function ConfirmDialog({
               width: 40,
               height: 40,
               borderRadius: 2,
-              backgroundColor: (theme) =>
-                alpha(theme.palette[color].main, 0.12),
+              backgroundColor: alpha(theme.palette[color].main, 0.12),
             }}
           >
             <Icon
@@ -85,11 +86,7 @@ export function ConfirmDialog({
       </DialogTitle>
 
       <DialogContent>
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ ml: 7 }}
-        >
+        <Typography variant="body2" color="text.secondary" sx={{ ml: 7 }}>
           {message}
         </Typography>
       </DialogContent>
@@ -103,25 +100,13 @@ export function ConfirmDialog({
             color: "text.primary",
             "&:hover": {
               borderColor: "text.secondary",
-              backgroundColor: (theme) =>
-                alpha(theme.palette.text.primary, 0.04),
+              backgroundColor: alpha(theme.palette.text.primary, 0.04),
             },
           }}
         >
           {cancelText}
         </Button>
-        <Button
-          onClick={onConfirm}
-          variant="contained"
-          color={color}
-          autoFocus
-          sx={{
-            boxShadow: "none",
-            "&:hover": {
-              boxShadow: "none",
-            },
-          }}
-        >
+        <Button onClick={onConfirm} variant="contained" color={color} autoFocus>
           {confirmText}
         </Button>
       </DialogActions>
