@@ -21,6 +21,7 @@ interface CardDeckProps {
   onEditCard: (card: CardType) => void;
   onDeleteCard: (card: CardType) => void;
   onCardDrop?: (card: CardType, targetStackId: string) => void;
+  onTrashDrop?: (card: CardType) => void;
 }
 
 export const CardDeck = memo(function CardDeck({
@@ -31,6 +32,7 @@ export const CardDeck = memo(function CardDeck({
   onEditCard,
   onDeleteCard,
   onCardDrop,
+  onTrashDrop,
 }: CardDeckProps) {
   const swiperRef = useRef<SwiperType | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -157,6 +159,7 @@ export const CardDeck = memo(function CardDeck({
                   onEdit={() => onEditCard(card)}
                   onDelete={() => onDeleteCard(card)}
                   onDrop={onCardDrop}
+                  onTrashDrop={onTrashDrop}
                 />
               </SwiperSlide>
             ))}

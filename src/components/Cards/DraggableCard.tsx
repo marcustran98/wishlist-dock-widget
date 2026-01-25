@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react";
 import { Box } from "@mui/material";
+import { alpha, useTheme } from "@mui/material/styles";
 import { Card } from "./Card";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -15,6 +16,7 @@ interface DraggableCardProps {
   onEdit: () => void;
   onDelete: () => void;
   onDrop?: (card: CardType, targetStackId: string) => void;
+  onTrashDrop?: (card: CardType) => void;
 }
 
 export function DraggableCard({
@@ -22,11 +24,12 @@ export function DraggableCard({
   onEdit,
   onDelete,
   onDrop,
+  onTrashDrop,
 }: DraggableCardProps) {
+  const theme = useTheme();
   const dispatch = useAppDispatch();
-  const { isDragging, draggedCard, hoveredStackId } = useAppSelector(
-    (state) => state.drag,
-  );
+  const { isDragging, draggedCard, hoveredStackId, isHoveringTrash } =
+    useAppSelector((state) => state.drag);
 
   const isBeingDragged = isDragging && draggedCard?.id === card.id;
 
@@ -37,15 +40,25 @@ export function DraggableCard({
 
   // Keep refs for latest values to avoid stale closures in global event handlers
   const hoveredStackIdRef = useRef(hoveredStackId);
+  const isHoveringTrashRef = useRef(isHoveringTrash);
   const onDropRef = useRef(onDrop);
+  const onTrashDropRef = useRef(onTrashDrop);
 
   useEffect(() => {
     hoveredStackIdRef.current = hoveredStackId;
   }, [hoveredStackId]);
 
   useEffect(() => {
+    isHoveringTrashRef.current = isHoveringTrash;
+  }, [isHoveringTrash]);
+
+  useEffect(() => {
     onDropRef.current = onDrop;
   }, [onDrop]);
+
+  useEffect(() => {
+    onTrashDropRef.current = onTrashDrop;
+  }, [onTrashDrop]);
 
   // Global pointer events for tracking drag movement and release
   useEffect(() => {
@@ -56,14 +69,19 @@ export function DraggableCard({
     };
 
     const handleGlobalUp = () => {
-      // Check if we're over a valid drop target before ending drag
-      const targetStackId = hoveredStackIdRef.current;
-      if (
-        targetStackId &&
-        targetStackId !== card.stackId &&
-        onDropRef.current
-      ) {
-        onDropRef.current(card, targetStackId);
+      // Check if we're over the trash zone
+      if (isHoveringTrashRef.current && onTrashDropRef.current) {
+        onTrashDropRef.current(card);
+      } else {
+        // Check if we're over a valid stack drop target
+        const targetStackId = hoveredStackIdRef.current;
+        if (
+          targetStackId &&
+          targetStackId !== card.stackId &&
+          onDropRef.current
+        ) {
+          onDropRef.current(card, targetStackId);
+        }
       }
       dispatch(endDrag());
     };
@@ -115,7 +133,7 @@ export function DraggableCard({
             borderRadius: "16px",
             border: "2px dashed",
             borderColor: "primary.main",
-            backgroundColor: "rgba(25, 118, 210, 0.08)",
+            backgroundColor: alpha(theme.palette.primary.main, 0.08),
             pointerEvents: "none",
           }}
         />

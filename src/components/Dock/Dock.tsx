@@ -187,6 +187,14 @@ export function Dock() {
     }
   };
 
+  const handleTrashDrop = async (card: Card) => {
+    try {
+      await deleteCard(card.id).unwrap();
+    } catch (error) {
+      console.error("Failed to delete card:", error);
+    }
+  };
+
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
   const filteredStacks = stacks.filter((stack) =>
@@ -218,6 +226,7 @@ export function Dock() {
           onEditCard={handleEditCard}
           onDeleteCard={handleDeleteCard}
           onCardDrop={handleCardDrop}
+          onTrashDrop={handleTrashDrop}
         />
       )}
       <DockExpanded

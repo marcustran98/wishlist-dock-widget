@@ -1,4 +1,5 @@
 import { Box, Typography, IconButton, styled } from "@mui/material";
+import { alpha, useTheme } from "@mui/material/styles";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import OpenWithIcon from "@mui/icons-material/OpenWith";
@@ -12,13 +13,13 @@ interface CardProps {
   onDragHandlePointerDown?: (e: React.PointerEvent) => void;
 }
 
-const ActionButton = styled(IconButton)({
-  backgroundColor: "rgba(255, 255, 255, 0.2)",
-  color: "white",
+const ActionButton = styled(IconButton)(({ theme }) => ({
+  backgroundColor: alpha(theme.palette.common.white, 0.2),
+  color: theme.palette.common.white,
   "&:hover": {
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    backgroundColor: alpha(theme.palette.common.white, 0.3),
   },
-});
+}));
 
 export function Card({
   card,
@@ -26,6 +27,8 @@ export function Card({
   onDelete,
   onDragHandlePointerDown,
 }: CardProps) {
+  const theme = useTheme();
+
   return (
     <Box
       sx={{
@@ -37,7 +40,7 @@ export function Card({
         backgroundImage: `url(${card.coverUrl})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
-        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+        boxShadow: `0 8px 32px ${alpha(theme.palette.common.black, 0.2)}`,
       }}
     >
       {/* Gradient overlay */}
@@ -48,8 +51,7 @@ export function Card({
           left: 0,
           right: 0,
           height: "50%",
-          background:
-            "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)",
+          background: `linear-gradient(to top, ${alpha(theme.palette.common.black, 0.7)} 0%, transparent 100%)`,
         }}
       />
 
@@ -98,7 +100,7 @@ export function Card({
             bottom: 80,
             left: "50%",
             transform: "translateX(-50%)",
-            backgroundColor: "rgba(255, 255, 255, 0.3)",
+            backgroundColor: alpha(theme.palette.common.white, 0.3),
             borderRadius: "8px",
             padding: "6px 20px",
             cursor: "grab",
@@ -106,9 +108,9 @@ export function Card({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            transition: "background-color 0.2s",
+            transition: "background-color 0.2s, transform 0.2s",
             "&:hover": {
-              backgroundColor: "rgba(255, 255, 255, 0.5)",
+              backgroundColor: alpha(theme.palette.common.white, 0.5),
               transform: "translateX(-50%) scale(1.05)",
             },
             "&:active": {
@@ -117,7 +119,7 @@ export function Card({
             },
           }}
         >
-          <OpenWithIcon sx={{ color: "white", fontSize: 18 }} />
+          <OpenWithIcon sx={{ color: theme.palette.common.white, fontSize: 18 }} />
         </Box>
       )}
 
@@ -131,14 +133,17 @@ export function Card({
           p: 2,
         }}
       >
-        <Typography variant="h6" sx={{ color: "white", fontWeight: 600 }}>
+        <Typography
+          variant="h6"
+          sx={{ color: theme.palette.common.white, fontWeight: 600 }}
+        >
           {card.name}
         </Typography>
         {card.description && (
           <Typography
             variant="body2"
             sx={{
-              color: "rgba(255, 255, 255, 0.7)",
+              color: alpha(theme.palette.common.white, 0.7),
               mt: 0.5,
               overflow: "hidden",
               textOverflow: "ellipsis",

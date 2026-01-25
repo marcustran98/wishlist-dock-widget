@@ -1,0 +1,86 @@
+import { useRef, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Box } from "@mui/material";
+import { alpha, useTheme } from "@mui/material/styles";
+import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { setHoveringTrash } from "@/store/slices/dragSlice";
+import { Z_INDEX, TRASH_ZONE } from "@/constants";
+
+export function TrashDropZone() {
+  const theme = useTheme();
+  const dispatch = useAppDispatch();
+  const trashZoneRef = useRef<HTMLDivElement>(null);
+
+  const { isDragging, dragPosition, isHoveringTrash } = useAppSelector(
+    (state) => state.drag
+  );
+
+  useEffect(() => {
+    if (!isDragging || !dragPosition || !trashZoneRef.current) {
+      if (isHoveringTrash) {
+        dispatch(setHoveringTrash(false));
+      }
+      return;
+    }
+
+    const rect = trashZoneRef.current.getBoundingClientRect();
+    const isOver =
+      dragPosition.x >= rect.left &&
+      dragPosition.x <= rect.right &&
+      dragPosition.y >= rect.top &&
+      dragPosition.y <= rect.bottom;
+
+    if (isOver !== isHoveringTrash) {
+      dispatch(setHoveringTrash(isOver));
+    }
+  }, [isDragging, dragPosition, isHoveringTrash, dispatch]);
+
+  if (!isDragging) {
+    return null;
+  }
+
+  return (
+    <motion.div
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: -100, opacity: 0 }}
+      transition={{ type: "spring", damping: 25, stiffness: 300 }}
+      style={{
+        position: "fixed",
+        top: TRASH_ZONE.TOP_OFFSET,
+        left: "50%",
+        transform: "translateX(-50%)",
+        zIndex: Z_INDEX.DRAG_OVERLAY,
+      }}
+    >
+      <Box
+        ref={trashZoneRef}
+        sx={{
+          width: TRASH_ZONE.SIZE,
+          height: TRASH_ZONE.SIZE,
+          borderRadius: "50%",
+          backgroundColor: isHoveringTrash
+            ? theme.palette.error.main
+            : alpha(theme.palette.error.main, 0.7),
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          transform: isHoveringTrash ? "scale(1.2)" : "scale(1)",
+          boxShadow: isHoveringTrash
+            ? `0 0 0 4px ${alpha(theme.palette.error.main, 0.3)}, 0 0 24px ${alpha(theme.palette.error.main, 0.5)}`
+            : `0 4px 16px ${alpha(theme.palette.common.black, 0.3)}`,
+          transition: "transform 0.2s, box-shadow 0.2s, background-color 0.2s",
+        }}
+      >
+        <DeleteForeverIcon
+          sx={{
+            fontSize: isHoveringTrash ? 32 : 28,
+            color: "white",
+            transition: "font-size 0.2s",
+          }}
+        />
+      </Box>
+    </motion.div>
+  );
+}

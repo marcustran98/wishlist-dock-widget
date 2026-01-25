@@ -27,3 +27,8 @@ export const CARD_DECK = {
   CARD_WIDTH: 280,
   CARD_HEIGHT: 400,
 } as const;
+
+export const TRASH_ZONE = {
+  SIZE: 64,
+  TOP_OFFSET: 32,
+} as const;

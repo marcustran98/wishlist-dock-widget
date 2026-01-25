@@ -6,6 +6,7 @@ interface DragState {
   draggedCard: Card | null;
   sourceStackId: string | null;
   hoveredStackId: string | null;
+  isHoveringTrash: boolean;
   dragPosition: { x: number; y: number } | null;
 }
 
@@ -14,6 +15,7 @@ const initialState: DragState = {
   draggedCard: null,
   sourceStackId: null,
   hoveredStackId: null,
+  isHoveringTrash: false,
   dragPosition: null,
 };
 
@@ -35,17 +37,26 @@ const dragSlice = createSlice({
     setHoveredStack(state, action: PayloadAction<string | null>) {
       state.hoveredStackId = action.payload;
     },
+    setHoveringTrash(state, action: PayloadAction<boolean>) {
+      state.isHoveringTrash = action.payload;
+    },
     endDrag(state) {
       state.isDragging = false;
       state.draggedCard = null;
       state.sourceStackId = null;
       state.hoveredStackId = null;
+      state.isHoveringTrash = false;
       state.dragPosition = null;
     },
   },
 });
 
-export const { startDrag, updateDragPosition, setHoveredStack, endDrag } =
-  dragSlice.actions;
+export const {
+  startDrag,
+  updateDragPosition,
+  setHoveredStack,
+  setHoveringTrash,
+  endDrag,
+} = dragSlice.actions;
 
 export default dragSlice.reducer;
