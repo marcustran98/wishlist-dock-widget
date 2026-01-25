@@ -58,8 +58,13 @@ function StackDialogForm({ stack, onClose, onSave }: StackDialogFormProps) {
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: "repeat(4, 48px)",
-            gap: 1,
+            gridTemplateColumns: {
+              xs: "repeat(4, 40px)",
+              sm: "repeat(4, 44px)",
+              md: "repeat(4, 48px)",
+            },
+            gap: { xs: 0.75, md: 1 },
+            justifyContent: "center",
           }}
         >
           {GRADIENTS.map((gradient) => (
@@ -67,9 +72,9 @@ function StackDialogForm({ stack, onClose, onSave }: StackDialogFormProps) {
               key={gradient}
               onClick={() => setSelectedGradient(gradient)}
               sx={{
-                width: 48,
-                height: 48,
-                borderRadius: "8px",
+                width: { xs: 40, sm: 44, md: 48 },
+                height: { xs: 40, sm: 44, md: 48 },
+                borderRadius: { xs: "6px", md: "8px" },
                 background: gradient,
                 cursor: "pointer",
                 border:

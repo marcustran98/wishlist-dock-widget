@@ -1,8 +1,15 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { Stack, Card, Notification } from "@/types";
 
+interface ProjectedCardViewState {
+  isOpen: boolean;
+  stackId: string | null;
+  initialCardIndex: number;
+}
+
 interface UiState {
   isExpanded: boolean;
+  isFullScreen: boolean;
   activeStackId: string | null;
   searchQuery: string;
   isSearchOpen: boolean;
@@ -11,10 +18,12 @@ interface UiState {
   editingStack: Stack | undefined;
   editingCard: Card | undefined;
   notification: Notification | null;
+  projectedCardView: ProjectedCardViewState;
 }
 
 const initialState: UiState = {
   isExpanded: false,
+  isFullScreen: false,
   activeStackId: null,
   searchQuery: "",
   isSearchOpen: false,
@@ -23,6 +32,11 @@ const initialState: UiState = {
   editingStack: undefined,
   editingCard: undefined,
   notification: null,
+  projectedCardView: {
+    isOpen: false,
+    stackId: null,
+    initialCardIndex: 0,
+  },
 };
 
 const uiSlice = createSlice({
@@ -58,6 +72,29 @@ const uiSlice = createSlice({
       state.editingStack = undefined;
       state.editingCard = undefined;
     },
+    setFullScreen(state, action: PayloadAction<boolean>) {
+      state.isFullScreen = action.payload;
+      if (action.payload) {
+        state.activeStackId = null;
+      }
+    },
+    openProjectedCardView(
+      state,
+      action: PayloadAction<{ stackId: string; cardIndex: number }>
+    ) {
+      state.projectedCardView = {
+        isOpen: true,
+        stackId: action.payload.stackId,
+        initialCardIndex: action.payload.cardIndex,
+      };
+    },
+    closeProjectedCardView(state) {
+      state.projectedCardView = {
+        isOpen: false,
+        stackId: null,
+        initialCardIndex: 0,
+      };
+    },
   },
 });
 
@@ -69,6 +106,9 @@ export const {
   openStackDialog,
   openCardDialog,
   closeDialogs,
+  setFullScreen,
+  openProjectedCardView,
+  closeProjectedCardView,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

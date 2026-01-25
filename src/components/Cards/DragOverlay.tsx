@@ -1,11 +1,19 @@
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Box } from "@mui/material";
+import { Box, useMediaQuery } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import { useAppSelector } from "@/store/hooks";
-import { Z_INDEX, CARD_DECK } from "@/constants";
+import { Z_INDEX } from "@/constants";
 import { TrashDropZone } from "./TrashDropZone";
 
 export function DragOverlay() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  // Responsive preview dimensions (30% of card size)
+  const previewWidth = isMobile ? 240 * 0.3 : 280 * 0.3;
+  const previewHeight = isMobile ? 340 * 0.3 : 400 * 0.3;
+
   const { isDragging, draggedCard, dragPosition } = useAppSelector(
     (state) => state.drag
   );
@@ -28,15 +36,15 @@ export function DragOverlay() {
               transform: "translate(-50%, -50%)",
               pointerEvents: "none",
               zIndex: Z_INDEX.DRAG_OVERLAY,
-              width: CARD_DECK.CARD_WIDTH * 0.3,
-              height: CARD_DECK.CARD_HEIGHT * 0.3,
+              width: previewWidth,
+              height: previewHeight,
             }}
           >
             <Box
               sx={{
                 width: "100%",
                 height: "100%",
-                borderRadius: "16px",
+                borderRadius: { xs: "12px", md: "16px" },
                 overflow: "hidden",
                 backgroundImage: `url(${draggedCard.coverUrl})`,
                 backgroundSize: "cover",

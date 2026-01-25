@@ -22,7 +22,12 @@ export function SearchBar({ value, onChange, onClose }: SearchBarProps) {
       size="small"
       placeholder="Search stacks..."
       autoFocus
-      sx={{ width: 200 }}
+      sx={{
+        width: { xs: 140, sm: 170, md: 200 },
+        "& .MuiInputBase-input": {
+          fontSize: { xs: "0.8rem", sm: "0.875rem" },
+        },
+      }}
       slotProps={{
         input: {
           startAdornment: (

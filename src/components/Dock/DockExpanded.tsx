@@ -1,9 +1,13 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { Box, Paper, IconButton, Typography } from "@mui/material";
+import { Swiper, SwiperSlide } from "swiper/react";
+import type { Swiper as SwiperType } from "swiper";
 import StarIcon from "@mui/icons-material/Star";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import RemoveIcon from "@mui/icons-material/Remove";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { LAYOUT, Z_INDEX } from "@/constants";
 import { StackThumbnail } from "./StackThumbnail";
 import { SearchBar } from "./SearchBar";
@@ -11,12 +15,15 @@ import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { setHoveredStack } from "@/store/slices/dragSlice";
 import type { Stack } from "@/types";
 
+import "swiper/css";
+
 interface DockExpandedProps {
   stacks: Stack[];
   activeStackId: string | null;
   searchQuery: string;
   isSearchOpen: boolean;
   onMinimize: () => void;
+  onFullScreen: () => void;
   onAddStack: () => void;
   onStackClick: (stackId: string) => void;
   onEditStack: (stack: Stack) => void;
@@ -32,6 +39,7 @@ export function DockExpanded({
   searchQuery,
   isSearchOpen,
   onMinimize,
+  onFullScreen,
   onAddStack,
   onStackClick,
   onEditStack,
@@ -43,9 +51,15 @@ export function DockExpanded({
   const dispatch = useAppDispatch();
   const { isDragging, sourceStackId, hoveredStackId, dragPosition } =
     useAppSelector((state) => state.drag);
+  const [isBeginning, setIsBeginning] = useState(true);
+  const [isEnd, setIsEnd] = useState(true);
   const dropZonesRef = useRef<Map<string, HTMLElement>>(new Map());
+  const swiperRef = useRef<SwiperType | null>(null);
 
-  const handleRegisterDropZone = (stackId: string, element: HTMLElement | null) => {
+  const handleRegisterDropZone = (
+    stackId: string,
+    element: HTMLElement | null,
+  ) => {
     if (element) {
       dropZonesRef.current.set(stackId, element);
     } else {
@@ -65,7 +79,6 @@ export function DockExpanded({
     let foundStackId: string | null = null;
 
     dropZonesRef.current.forEach((element, stackId) => {
-      // Skip the source stack
       if (stackId === sourceStackId) return;
 
       const rect = element.getBoundingClientRect();
@@ -90,74 +103,119 @@ export function DockExpanded({
       sx={{
         position: "fixed",
         bottom: 0,
-        left: 0,
-        right: 0,
-        height: LAYOUT.DOCK_HEIGHT,
+        width: { xs: "95vw", sm: 600, md: 800 },
+        maxWidth: "95vw",
+        left: "50%",
+        transform: "translateX(-50%)",
+        height: { xs: 80, sm: 100, md: 120 },
         zIndex: Z_INDEX.DOCK,
         display: "flex",
         alignItems: "center",
-        px: 2,
-        borderRadius: "16px 16px 0 0",
+        px: { xs: 1, sm: 1.5, md: 2 },
+        borderRadius: { xs: "12px 12px 0 0", md: "16px 16px 0 0" },
       }}
     >
-      {/* Left: Logo - click to minimize */}
+      {/* Left: Logo - click to expand full screen */}
       <Box
-        onClick={onMinimize}
+        onClick={onFullScreen}
         sx={{
           display: "flex",
           alignItems: "center",
-          gap: 1,
+          gap: { xs: 0.5, sm: 1 },
           cursor: "pointer",
           color: "primary.main",
-          mr: 2,
+          mr: { xs: 0.5, sm: 1 },
           "&:hover": {
             opacity: 0.8,
           },
         }}
       >
-        <StarIcon />
-        <Typography variant="body1" fontWeight={600}>
+        <StarIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
+        <Typography
+          variant="body1"
+          fontWeight={600}
+          sx={{
+            fontSize: { xs: "0.875rem", sm: "1rem" },
+            display: { xs: "none", sm: "block" },
+          }}
+        >
           plugilo
         </Typography>
       </Box>
 
-      {/* Center: Stack thumbnails area */}
-      <Box
-        sx={{
-          flex: 1,
-          display: "flex",
-          alignItems: "center",
-          gap: `${LAYOUT.THUMBNAIL_GAP}px`,
-          overflowX: "auto",
-          py: 1,
-          "&::-webkit-scrollbar": {
-            display: "none",
-          },
-          scrollbarWidth: "none",
-        }}
-      >
-        {stacks.map((stack) => (
-          <StackThumbnail
-            key={stack.id}
-            stack={stack}
-            isActive={activeStackId === stack.id}
-            isDropTarget={isDragging && sourceStackId !== stack.id}
-            isHoveredDuringDrag={hoveredStackId === stack.id}
-            onClick={() => onStackClick(stack.id)}
-            onEdit={() => onEditStack(stack)}
-            onDelete={() => onDeleteStack(stack)}
-            onRegisterDropZone={handleRegisterDropZone}
-          />
-        ))}
-        {stacks.length === 0 && (
-          <Typography variant="body2" color="text.secondary">
+      {/* Left arrow - only show when not at beginning */}
+      {!isBeginning && (
+        <IconButton
+          size="small"
+          onClick={() => swiperRef.current?.slidePrev()}
+          sx={{ color: "text.secondary" }}
+        >
+          <ChevronLeftIcon />
+        </IconButton>
+      )}
+
+      {/* Center: Swipeable stack thumbnails */}
+      <Box sx={{ flex: 1, overflow: "hidden" }}>
+        {stacks.length === 0 ? (
+          <Typography variant="body2" color="text.secondary" sx={{ px: 2 }}>
             No stacks found
           </Typography>
+        ) : (
+          <Swiper
+            onSwiper={(swiper) => {
+              swiperRef.current = swiper;
+              setIsBeginning(swiper.isBeginning);
+              setIsEnd(swiper.isEnd);
+            }}
+            onSlideChange={(swiper) => {
+              setIsBeginning(swiper.isBeginning);
+              setIsEnd(swiper.isEnd);
+            }}
+            onReachBeginning={() => setIsBeginning(true)}
+            onReachEnd={() => setIsEnd(true)}
+            slidesPerView="auto"
+            spaceBetween={LAYOUT.THUMBNAIL_GAP}
+            style={{ padding: "8px 0" }}
+          >
+            {stacks.map((stack) => (
+              <SwiperSlide key={stack.id} style={{ width: "auto" }}>
+                <StackThumbnail
+                  stack={stack}
+                  isActive={activeStackId === stack.id}
+                  isDropTarget={isDragging && sourceStackId !== stack.id}
+                  isHoveredDuringDrag={hoveredStackId === stack.id}
+                  onClick={() => onStackClick(stack.id)}
+                  onEdit={() => onEditStack(stack)}
+                  onDelete={() => onDeleteStack(stack)}
+                  onRegisterDropZone={handleRegisterDropZone}
+                />
+              </SwiperSlide>
+            ))}
+          </Swiper>
         )}
       </Box>
 
+      {/* Right arrow - only show when not at end */}
+      {!isEnd && (
+        <IconButton
+          size="small"
+          onClick={() => swiperRef.current?.slideNext()}
+          sx={{ color: "text.secondary" }}
+        >
+          <ChevronRightIcon />
+        </IconButton>
+      )}
+
       {/* Right: Action buttons */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 0.5,
+          ml: 1,
+          pt: 0.5,
+        }}
+      >
         {isSearchOpen ? (
           <SearchBar
             value={searchQuery}
@@ -170,6 +228,9 @@ export function DockExpanded({
               onClick={onAddStack}
               color="primary"
               sx={{
+                borderRadius: { xs: "8px", md: "10px" },
+                width: { xs: 48, sm: 56, md: 64 },
+                height: { xs: 48, sm: 56, md: 64 },
                 backgroundColor: "primary.main",
                 color: "white",
                 "&:hover": {
@@ -177,14 +238,24 @@ export function DockExpanded({
                 },
               }}
             >
-              <AddIcon />
+              <AddIcon sx={{ fontSize: { xs: 20, sm: 22, md: 24 } }} />
             </IconButton>
-            <IconButton color="default" onClick={onSearchToggle}>
-              <SearchIcon />
-            </IconButton>
-            <IconButton onClick={onMinimize} color="default">
-              <RemoveIcon />
-            </IconButton>
+            <Box display="flex">
+              <IconButton
+                color="default"
+                onClick={onSearchToggle}
+                sx={{ padding: 0.5 }}
+              >
+                <SearchIcon />
+              </IconButton>
+              <IconButton
+                onClick={onMinimize}
+                color="default"
+                sx={{ padding: 0.5 }}
+              >
+                <RemoveIcon />
+              </IconButton>
+            </Box>
           </>
         )}
       </Box>

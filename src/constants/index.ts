@@ -8,6 +8,8 @@ export const LAYOUT = {
 export const Z_INDEX = {
   DOCK: 1000,
   CARD_DECK: 999,
+  FULLSCREEN: 1050,
+  PROJECTED_CARD: 1075,
   DIALOG: 1100,
   DRAG_OVERLAY: 1200,
 } as const;
@@ -23,12 +25,29 @@ export const GRADIENTS = [
   "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
 ] as const;
 
-export const CARD_DECK = {
-  CARD_WIDTH: 280,
-  CARD_HEIGHT: 400,
+export const CARD_DIMENSIONS = {
+  dock: {
+    mobile: { width: 240, height: 340 },
+    tablet: { width: 260, height: 370 },
+    desktop: { width: 280, height: 400 },
+  },
+  modal: {
+    mobile: { width: 260, height: 374 },
+    tablet: { width: 290, height: 417 },
+    desktop: { width: 320, height: 460 },
+  },
 } as const;
 
 export const TRASH_ZONE = {
   SIZE: 64,
   TOP_OFFSET: 32,
+} as const;
+
+export const FULLSCREEN = {
+  HEADER_HEIGHT: 64,
+  SECTION_PADDING: 24,
+  CARD_THUMBNAIL_WIDTH: 160,
+  CARD_THUMBNAIL_HEIGHT: 220,
+  PROJECTED_CARD_WIDTH: 320,
+  PROJECTED_CARD_HEIGHT: 460,
 } as const;

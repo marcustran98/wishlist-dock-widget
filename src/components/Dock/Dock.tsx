@@ -1,7 +1,8 @@
 import { useState, useDeferredValue } from "react";
 import { DockMinimized } from "./DockMinimized";
 import { DockExpanded } from "./DockExpanded";
-import { CardDeck, DragOverlay } from "@/components/Cards";
+import { CardView, DragOverlay } from "@/components/Cards";
+import { FullScreenView } from "@/components/FullScreen";
 import { StackDialog, CardDialog } from "@/components/Dialogs";
 import { ConfirmDialog } from "@/components/common";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -13,6 +14,7 @@ import {
   openStackDialog,
   openCardDialog,
   closeDialogs,
+  setFullScreen,
 } from "@/store/slices/uiSlice";
 import {
   useGetStacksQuery,
@@ -26,11 +28,17 @@ import {
 } from "@/store/api/apiSlice";
 import type { Card, Stack } from "@/types";
 
-export function Dock() {
+interface DockProps {
+  themeMode: "light" | "dark";
+  onToggleTheme: () => void;
+}
+
+export function Dock({ themeMode, onToggleTheme }: DockProps) {
   const dispatch = useAppDispatch();
 
   const {
     isExpanded,
+    isFullScreen,
     activeStackId,
     searchQuery,
     isSearchOpen,
@@ -112,7 +120,20 @@ export function Dock() {
     dispatch(setSearchOpen(false));
   };
 
+  const handleEnterFullScreen = () => {
+    dispatch(setFullScreen(true));
+  };
+
+  const handleExitFullScreen = () => {
+    dispatch(setFullScreen(false));
+  };
+
   const handleAddCard = () => {
+    dispatch(openCardDialog(undefined));
+  };
+
+  const handleAddCardToStack = (stackId: string) => {
+    dispatch(setActiveStack(stackId));
     dispatch(openCardDialog(undefined));
   };
 
@@ -214,17 +235,80 @@ export function Dock() {
     return <DockMinimized onExpand={() => dispatch(setExpanded(true))} />;
   }
 
+  if (isFullScreen) {
+    return (
+      <>
+        <FullScreenView
+          stacks={filteredStacks}
+          cards={cards}
+          searchQuery={searchQuery}
+          onSearchChange={(value) => dispatch(setSearchQuery(value))}
+          onClose={handleExitFullScreen}
+          onAddStack={handleAddStack}
+          onEditStack={handleEditStack}
+          onDeleteStack={handleDeleteStack}
+          onAddCard={handleAddCardToStack}
+          onEditCard={handleEditCard}
+          onDeleteCard={handleDeleteCard}
+          onMoveCard={handleCardDrop}
+          themeMode={themeMode}
+          onToggleTheme={onToggleTheme}
+        />
+
+        <DragOverlay />
+
+        <StackDialog
+          open={stackDialogOpen}
+          onClose={() => dispatch(closeDialogs())}
+          stack={editingStack}
+          onSave={handleSaveStack}
+        />
+
+        <CardDialog
+          open={cardDialogOpen}
+          onClose={() => dispatch(closeDialogs())}
+          card={editingCard}
+          stacks={stacks}
+          initialStackId={activeStackId ?? undefined}
+          onSave={handleSaveCard}
+        />
+
+        <ConfirmDialog
+          open={confirmDialog.open}
+          title="Delete Stack"
+          message={`Are you sure you want to delete "${confirmDialog.stack?.name}"? This will also delete all cards in this stack.`}
+          confirmText="Delete"
+          cancelText="Cancel"
+          severity="error"
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
+        />
+
+        <ConfirmDialog
+          open={cardConfirmDialog.open}
+          title="Delete Card"
+          message={`Are you sure you want to delete "${cardConfirmDialog.card?.name}"?`}
+          confirmText="Delete"
+          cancelText="Cancel"
+          severity="warning"
+          onConfirm={handleConfirmDeleteCard}
+          onCancel={handleCancelDeleteCard}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       {activeStackId && activeStack && !cardDialogOpen && (
-        <CardDeck
+        <CardView
           key={activeStackId}
-          stackName={activeStack.name}
+          displayMode="dock"
+          stack={activeStack}
           cards={activeStackCards}
           onClose={handleCloseCardDeck}
           onAddCard={handleAddCard}
           onEditCard={handleEditCard}
-          onDeleteCard={handleDeleteCard}
           onCardDrop={handleCardDrop}
           onTrashDrop={handleTrashDrop}
         />
@@ -235,6 +319,7 @@ export function Dock() {
         searchQuery={searchQuery}
         isSearchOpen={isSearchOpen}
         onMinimize={() => dispatch(setExpanded(false))}
+        onFullScreen={handleEnterFullScreen}
         onAddStack={handleAddStack}
         onStackClick={handleStackClick}
         onEditStack={handleEditStack}

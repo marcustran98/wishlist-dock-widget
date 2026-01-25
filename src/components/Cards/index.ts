@@ -1,5 +1,5 @@
 export { Card } from "./Card";
-export { CardDeck } from "./CardDeck";
+export { CardView } from "./CardView";
 export { DraggableCard } from "./DraggableCard";
 export { DragOverlay } from "./DragOverlay";
 export { TrashDropZone } from "./TrashDropZone";

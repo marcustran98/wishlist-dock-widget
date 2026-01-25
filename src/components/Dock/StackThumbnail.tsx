@@ -14,7 +14,6 @@ import { alpha, useTheme } from "@mui/material/styles";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { LAYOUT } from "@/constants";
 import type { Stack } from "@/types";
 
 interface StackThumbnailProps {
@@ -88,90 +87,117 @@ export function StackThumbnail({
       }}
     >
       <Badge
+        component="div"
         badgeContent={stack.cardCount}
         color="primary"
         sx={{
           "& .MuiBadge-badge": {
-            top: 4,
-            right: 4,
-            fontSize: 10,
-            minWidth: 18,
-            height: 18,
+            top: 2,
+            right: 2,
+            fontSize: { xs: 8, md: 10 },
+            minWidth: { xs: 14, md: 18 },
+            height: { xs: 14, md: 18 },
           },
         }}
       >
+        {/* Outer container with border */}
         <Box
           ref={thumbnailRef}
           sx={{
-            width: LAYOUT.THUMBNAIL_SIZE,
-            height: LAYOUT.THUMBNAIL_SIZE,
-            borderRadius: "8px",
-            background: stack.coverUrl,
-            border: isActive ? "2px solid" : "2px solid transparent",
+            width: { xs: 48, sm: 56, md: 64 },
+            height: { xs: 54, sm: 62, md: 70 },
+            borderRadius: { xs: "8px", md: "10px" },
+            border: "2px solid",
             borderColor: isActive
               ? "primary.main"
-              : isHoveredDuringDrag
-                ? "primary.main"
-                : isDropTarget
-                  ? alpha(theme.palette.primary.main, 0.5)
-                  : "transparent",
-            transition:
-              "border-color 0.2s, transform 0.2s, box-shadow 0.2s",
+              : alpha(theme.palette.grey[400], 0.6),
+            transition: "all 0.2s ease-in-out",
             position: "relative",
-            transform: isHoveredDuringDrag
-              ? "scale(1.15)"
-              : isDropTarget
-                ? "scale(1.08)"
-                : "scale(1)",
-            boxShadow: isHoveredDuringDrag
-              ? `0 0 0 3px ${alpha(theme.palette.primary.main, 0.4)}, 0 0 16px ${alpha(theme.palette.primary.main, 0.3)}`
-              : isDropTarget
-                ? `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`
-                : "none",
+            overflow: "hidden",
+            transform: isDropTarget ? "scale(1.08)" : "scale(1)",
+            backgroundColor: alpha(theme.palette.grey[200], 0.3),
+            boxShadow: isActive
+              ? `0 0 0 3px ${alpha(theme.palette.primary.main, 0.25)}, 0 4px 12px ${alpha(theme.palette.primary.main, 0.2)}`
+              : `0 2px 8px ${alpha(theme.palette.common.black, 0.08)}`,
+
             "&:hover": {
-              transform: isHoveredDuringDrag
-                ? "scale(1.15)"
-                : isDropTarget
-                  ? "scale(1.1)"
-                  : "scale(1.05)",
+              transform: isDropTarget ? "scale(1.1)" : "scale(1.02)",
+              borderColor: isActive
+                ? "primary.main"
+                : alpha(theme.palette.grey[500], 0.8),
+              boxShadow: isActive
+                ? `0 0 0 3px ${alpha(theme.palette.primary.main, 0.25)}, 0 4px 12px ${alpha(theme.palette.primary.main, 0.2)}`
+                : `0 4px 12px ${alpha(theme.palette.common.black, 0.12)}`,
+            },
+
+            ...(isDropTarget && {
+              borderColor: alpha(theme.palette.primary.main, 0.6),
+              boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`,
+            }),
+
+            ...(isHoveredDuringDrag && {
+              borderColor: theme.palette.primary.main,
+              transform: "scale(1.15)",
+              boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.4)}, 0 0 16px ${alpha(theme.palette.primary.main, 0.3)}`,
+              "&:hover": {
+                transform: "scale(1.15)",
+              },
+            }),
+          }}
+        >
+          {/* Inner main area with background */}
+          <Box
+            sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: { xs: 4, md: 6 },
+              background: stack.coverUrl,
+              borderRadius: { xs: "6px 6px 4px 4px", md: "8px 8px 6px 6px" },
+              borderBottom: "1px solid",
+              borderBottomColor: alpha(theme.palette.grey[400], 0.4),
+            }}
+          />
+        </Box>
+      </Badge>
+      {/* Stack name with menu button */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 0.25,
+          maxWidth: { xs: 64, sm: 72, md: 80 },
+        }}
+      >
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            fontSize: { xs: "0.65rem", sm: "0.7rem", md: "0.75rem" },
+          }}
+          noWrap
+        >
+          {stack.name}
+        </Typography>
+        <IconButton
+          className="menu-button"
+          size="small"
+          onClick={handleMenuClick}
+          sx={{
+            opacity: 0,
+            transition: "opacity 0.2s",
+            padding: "2px",
+            color: "text.secondary",
+            "&:hover": {
+              color: "text.primary",
+              backgroundColor: alpha(theme.palette.action.hover, 0.1),
             },
           }}
         >
-          <IconButton
-            className="menu-button"
-            size="small"
-            onClick={handleMenuClick}
-            sx={{
-              position: "absolute",
-              top: 2,
-              right: 2,
-              opacity: 0,
-              transition: "opacity 0.2s",
-              backgroundColor: "rgba(0, 0, 0, 0.5)",
-              color: "white",
-              padding: "2px",
-              "&:hover": {
-                backgroundColor: "rgba(0, 0, 0, 0.7)",
-              },
-            }}
-          >
-            <MoreVertIcon sx={{ fontSize: 14 }} />
-          </IconButton>
-        </Box>
-      </Badge>
-      <Typography
-        variant="caption"
-        sx={{
-          maxWidth: LAYOUT.THUMBNAIL_SIZE,
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-          textAlign: "center",
-          color: "text.secondary",
-        }}
-      >
-        {stack.name}
-      </Typography>
+          <MoreVertIcon sx={{ fontSize: { xs: 12, md: 14 } }} />
+        </IconButton>
+      </Box>
 
       <Menu
         anchorEl={anchorEl}

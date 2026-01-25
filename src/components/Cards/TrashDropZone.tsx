@@ -1,16 +1,21 @@
 import { useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Box } from "@mui/material";
+import { Box, useMediaQuery } from "@mui/material";
 import { alpha, useTheme } from "@mui/material/styles";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setHoveringTrash } from "@/store/slices/dragSlice";
-import { Z_INDEX, TRASH_ZONE } from "@/constants";
+import { Z_INDEX } from "@/constants";
 
 export function TrashDropZone() {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const dispatch = useAppDispatch();
   const trashZoneRef = useRef<HTMLDivElement>(null);
+
+  // Responsive dimensions
+  const trashSize = isMobile ? 48 : 64;
+  const topOffset = isMobile ? 16 : 32;
 
   const { isDragging, dragPosition, isHoveringTrash } = useAppSelector(
     (state) => state.drag
@@ -48,7 +53,7 @@ export function TrashDropZone() {
       transition={{ type: "spring", damping: 25, stiffness: 300 }}
       style={{
         position: "fixed",
-        top: TRASH_ZONE.TOP_OFFSET,
+        top: topOffset,
         left: "50%",
         transform: "translateX(-50%)",
         zIndex: Z_INDEX.DRAG_OVERLAY,
@@ -57,8 +62,8 @@ export function TrashDropZone() {
       <Box
         ref={trashZoneRef}
         sx={{
-          width: TRASH_ZONE.SIZE,
-          height: TRASH_ZONE.SIZE,
+          width: trashSize,
+          height: trashSize,
           borderRadius: "50%",
           backgroundColor: isHoveringTrash
             ? theme.palette.error.main
@@ -75,7 +80,9 @@ export function TrashDropZone() {
       >
         <DeleteForeverIcon
           sx={{
-            fontSize: isHoveringTrash ? 32 : 28,
+            fontSize: isHoveringTrash
+              ? { xs: 24, md: 32 }
+              : { xs: 20, md: 28 },
             color: "white",
             transition: "font-size 0.2s",
           }}

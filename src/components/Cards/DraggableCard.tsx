@@ -8,23 +8,24 @@ import {
   updateDragPosition,
   endDrag,
 } from "@/store/slices/dragSlice";
-import { CARD_DECK } from "@/constants";
 import type { Card as CardType } from "@/types";
 
 interface DraggableCardProps {
   card: CardType;
   onEdit: () => void;
-  onDelete: () => void;
   onDrop?: (card: CardType, targetStackId: string) => void;
   onTrashDrop?: (card: CardType) => void;
+  width?: number;
+  height?: number;
 }
 
 export function DraggableCard({
   card,
   onEdit,
-  onDelete,
   onDrop,
   onTrashDrop,
+  width,
+  height,
 }: DraggableCardProps) {
   const theme = useTheme();
   const dispatch = useAppDispatch();
@@ -32,6 +33,10 @@ export function DraggableCard({
     useAppSelector((state) => state.drag);
 
   const isBeingDragged = isDragging && draggedCard?.id === card.id;
+
+  // Use custom dimensions if provided, otherwise responsive defaults
+  const boxWidth = width ?? { xs: 240, sm: 260, md: 280 };
+  const boxHeight = height ?? { xs: 340, sm: 370, md: 400 };
 
   const handleDragHandlePointerDown = (e: React.PointerEvent) => {
     dispatch(startDrag(card));
@@ -100,8 +105,8 @@ export function DraggableCard({
   return (
     <Box
       sx={{
-        width: CARD_DECK.CARD_WIDTH,
-        height: CARD_DECK.CARD_HEIGHT,
+        width: boxWidth,
+        height: boxHeight,
         position: "relative",
       }}
     >
@@ -116,7 +121,8 @@ export function DraggableCard({
         <Card
           card={card}
           onEdit={onEdit}
-          onDelete={onDelete}
+          width={width}
+          height={height}
           onDragHandlePointerDown={handleDragHandlePointerDown}
         />
       </Box>
@@ -130,7 +136,7 @@ export function DraggableCard({
             left: 0,
             width: "100%",
             height: "100%",
-            borderRadius: "16px",
+            borderRadius: { xs: "12px", md: "16px" },
             border: "2px dashed",
             borderColor: "primary.main",
             backgroundColor: alpha(theme.palette.primary.main, 0.08),

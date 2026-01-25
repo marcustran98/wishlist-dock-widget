@@ -105,12 +105,13 @@ function CardDialogForm({
             required
             value={coverUrl}
             onChange={(e) => setCoverUrl(e.target.value)}
+            sx={{ my: 0 }}
           />
           <Button
             variant="outlined"
             onClick={handleRandomImage}
             startIcon={<CasinoIcon />}
-            sx={{ mt: 1, whiteSpace: "nowrap" }}
+            sx={{ whiteSpace: "nowrap" }}
           >
             Random
           </Button>

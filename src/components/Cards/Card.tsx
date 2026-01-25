@@ -1,17 +1,8 @@
 import { Box, Typography, IconButton, styled } from "@mui/material";
 import { alpha, useTheme } from "@mui/material/styles";
 import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
 import OpenWithIcon from "@mui/icons-material/OpenWith";
-import { CARD_DECK } from "@/constants";
 import type { Card as CardType } from "@/types";
-
-interface CardProps {
-  card: CardType;
-  onEdit: () => void;
-  onDelete: () => void;
-  onDragHandlePointerDown?: (e: React.PointerEvent) => void;
-}
 
 const ActionButton = styled(IconButton)(({ theme }) => ({
   backgroundColor: alpha(theme.palette.common.white, 0.2),
@@ -21,20 +12,34 @@ const ActionButton = styled(IconButton)(({ theme }) => ({
   },
 }));
 
+interface CardProps {
+  card: CardType;
+  onDragHandlePointerDown?: (e: React.PointerEvent) => void;
+  mode?: "deck" | "swiper";
+  onEdit: () => void;
+  width?: number;
+  height?: number;
+}
+
 export function Card({
   card,
   onEdit,
-  onDelete,
   onDragHandlePointerDown,
+  width,
+  height,
 }: CardProps) {
   const theme = useTheme();
+
+  // Use custom dimensions if provided, otherwise responsive defaults
+  const cardWidth = width ?? { xs: 240, sm: 260, md: 280 };
+  const cardHeight = height ?? { xs: 340, sm: 370, md: 400 };
 
   return (
     <Box
       sx={{
-        width: CARD_DECK.CARD_WIDTH,
-        height: CARD_DECK.CARD_HEIGHT,
-        borderRadius: "16px",
+        width: cardWidth,
+        height: cardHeight,
+        borderRadius: { xs: "12px", md: "16px" },
         position: "relative",
         overflow: "hidden",
         backgroundImage: `url(${card.coverUrl})`,
@@ -55,39 +60,25 @@ export function Card({
         }}
       />
 
-      {/* Action buttons */}
       <Box
         sx={{
           position: "absolute",
-          top: 12,
+          bottom: 16,
           right: 12,
           display: "flex",
           gap: 1,
         }}
       >
         <ActionButton
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit();
-          }}
+          onClick={onEdit}
           size="small"
           aria-label={`Edit ${card.name}`}
         >
           <EditIcon fontSize="small" />
         </ActionButton>
-        <ActionButton
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          size="small"
-          aria-label={`Delete ${card.name}`}
-        >
-          <DeleteIcon fontSize="small" />
-        </ActionButton>
       </Box>
 
-      {/* Drag handle */}
+      {/* Drag handle - shown in both modes when provided */}
       {onDragHandlePointerDown && (
         <Box
           onPointerDown={(e) => {
@@ -97,12 +88,12 @@ export function Card({
           }}
           sx={{
             position: "absolute",
-            bottom: 80,
+            bottom: { xs: 60, sm: 70, md: 80 },
             left: "50%",
             transform: "translateX(-50%)",
             backgroundColor: alpha(theme.palette.common.white, 0.3),
-            borderRadius: "8px",
-            padding: "6px 20px",
+            borderRadius: { xs: "6px", md: "8px" },
+            padding: { xs: "4px 16px", md: "6px 20px" },
             cursor: "grab",
             touchAction: "none",
             display: "flex",
@@ -119,7 +110,12 @@ export function Card({
             },
           }}
         >
-          <OpenWithIcon sx={{ color: theme.palette.common.white, fontSize: 18 }} />
+          <OpenWithIcon
+            sx={{
+              color: theme.palette.common.white,
+              fontSize: { xs: 16, md: 18 },
+            }}
+          />
         </Box>
       )}
 
@@ -130,12 +126,16 @@ export function Card({
           bottom: 0,
           left: 0,
           right: 0,
-          p: 2,
+          p: { xs: 1.5, md: 2 },
         }}
       >
         <Typography
           variant="h6"
-          sx={{ color: theme.palette.common.white, fontWeight: 600 }}
+          sx={{
+            color: theme.palette.common.white,
+            fontWeight: 600,
+            fontSize: { xs: "1rem", sm: "1.1rem", md: "1.25rem" },
+          }}
         >
           {card.name}
         </Typography>
@@ -145,6 +145,7 @@ export function Card({
             sx={{
               color: alpha(theme.palette.common.white, 0.7),
               mt: 0.5,
+              fontSize: { xs: "0.75rem", md: "0.875rem" },
               overflow: "hidden",
               textOverflow: "ellipsis",
               display: "-webkit-box",
