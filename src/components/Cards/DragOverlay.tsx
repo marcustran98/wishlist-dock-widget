@@ -6,7 +6,11 @@ import { useAppSelector } from "@/store/hooks";
 import { Z_INDEX } from "@/constants";
 import { TrashDropZone } from "./TrashDropZone";
 
-export function DragOverlay() {
+interface DragOverlayProps {
+  portalContainer?: HTMLElement | null;
+}
+
+export function DragOverlay({ portalContainer }: DragOverlayProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -72,6 +76,6 @@ export function DragOverlay() {
         {isDragging && <TrashDropZone key="trash-zone" />}
       </AnimatePresence>
     </>,
-    document.body
+    portalContainer ?? document.body
   );
 }

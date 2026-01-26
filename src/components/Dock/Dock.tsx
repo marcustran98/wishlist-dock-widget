@@ -31,9 +31,11 @@ import type { Card, Stack } from "@/types";
 interface DockProps {
   themeMode: "light" | "dark";
   onToggleTheme: () => void;
+  // Portal container for Shadow DOM support
+  portalContainer?: HTMLElement | null;
 }
 
-export function Dock({ themeMode, onToggleTheme }: DockProps) {
+export function Dock({ themeMode, onToggleTheme, portalContainer }: DockProps) {
   const dispatch = useAppDispatch();
 
   const {
@@ -82,7 +84,7 @@ export function Dock({ themeMode, onToggleTheme }: DockProps) {
       if (editingStack) {
         await updateStack({ id: editingStack.id, request: { name, coverUrl } });
       } else {
-        await createStack({ name, coverUrl });
+        await createStack({ name, coverUrl }).unwrap();
       }
     } catch (error) {
       console.error("Failed to save stack:", error);
@@ -99,10 +101,11 @@ export function Dock({ themeMode, onToggleTheme }: DockProps) {
 
   const handleConfirmDelete = async () => {
     if (!confirmDialog.stack) return;
+    const stackId = confirmDialog.stack.id;
 
     try {
-      await deleteStack(confirmDialog.stack.id);
-      if (activeStackId === confirmDialog.stack.id) {
+      await deleteStack(stackId);
+      if (activeStackId === stackId) {
         dispatch(setActiveStack(null));
       }
     } catch (error) {
@@ -164,7 +167,7 @@ export function Dock({ themeMode, onToggleTheme }: DockProps) {
           description: data.description || undefined,
           coverUrl: data.coverUrl,
           stackId: data.stackId,
-        });
+        }).unwrap();
       }
     } catch (error) {
       console.error("Failed to save card:", error);
@@ -181,9 +184,10 @@ export function Dock({ themeMode, onToggleTheme }: DockProps) {
 
   const handleConfirmDeleteCard = async () => {
     if (!cardConfirmDialog.card) return;
+    const cardId = cardConfirmDialog.card.id;
 
     try {
-      await deleteCard(cardConfirmDialog.card.id).unwrap();
+      await deleteCard(cardId).unwrap();
     } catch (error) {
       console.error("Failed to delete card:", error);
     } finally {
@@ -255,7 +259,7 @@ export function Dock({ themeMode, onToggleTheme }: DockProps) {
           onToggleTheme={onToggleTheme}
         />
 
-        <DragOverlay />
+        <DragOverlay portalContainer={portalContainer} />
 
         <StackDialog
           open={stackDialogOpen}
@@ -329,7 +333,7 @@ export function Dock({ themeMode, onToggleTheme }: DockProps) {
         onSearchClose={handleSearchClose}
       />
 
-      <DragOverlay />
+      <DragOverlay portalContainer={portalContainer} />
 
       <StackDialog
         open={stackDialogOpen}

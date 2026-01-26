@@ -67,6 +67,7 @@ export function Card({
           right: 12,
           display: "flex",
           gap: 1,
+          zIndex: 1,
         }}
       >
         <ActionButton

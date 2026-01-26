@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wishlist Widget Demo</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .demo-header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      button {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        border: none;
+        border-radius: 6px;
+        background: #1976d2;
+        color: white;
+        margin: 0 5px;
+      }
+      button:hover {
+        background: #1565c0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-header">
+      <h1>Wishlist Widget Demo</h1>
+      <button onclick="toggleTheme()">Toggle Theme</button>
+      <button onclick="loadMockData()">Load Mock Data</button>
+    </div>
+
+    <wishlist-dock id="widget" theme="light"></wishlist-dock>
+
+    <script src="../../dist/wishlist-dock.js"></script>
+
+    <script>
+      const widget = document.getElementById("widget");
+
+      function toggleTheme() {
+        widget.theme = widget.theme === "light" ? "dark" : "light";
+      }
+
+      function loadMockData() {
+        const STORAGE_KEY = "wishlist-dock-data";
+        const now = new Date().toISOString();
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({
+            stacks: [
+              {
+                id: "s1",
+                name: "Favorites",
+                coverUrl: "linear-gradient(135deg, #667eea, #764ba2)",
+                cardCount: 2,
+                createdAt: now,
+                updatedAt: now,
+              },
+              {
+                id: "s2",
+                name: "Read Later",
+                coverUrl: "linear-gradient(135deg, #f093fb, #f5576c)",
+                cardCount: 1,
+                createdAt: now,
+                updatedAt: now,
+              },
+            ],
+            cards: [
+              {
+                id: "c1",
+                stackId: "s1",
+                name: "Sample Card 1",
+                description: "This is a sample card",
+                coverUrl: "https://picsum.photos/300/400?random=1",
+                position: 0,
+                createdAt: now,
+                updatedAt: now,
+              },
+              {
+                id: "c2",
+                stackId: "s1",
+                name: "Sample Card 2",
+                description: "Another sample card",
+                coverUrl: "https://picsum.photos/300/400?random=2",
+                position: 1,
+                createdAt: now,
+                updatedAt: now,
+              },
+              {
+                id: "c3",
+                stackId: "s2",
+                name: "Article to Read",
+                description: "Save for later",
+                coverUrl: "https://picsum.photos/300/400?random=3",
+                position: 0,
+                createdAt: now,
+                updatedAt: now,
+              },
+            ],
+          }),
+        );
+        location.reload();
+      }
+    </script>
+  </body>
+</html>
