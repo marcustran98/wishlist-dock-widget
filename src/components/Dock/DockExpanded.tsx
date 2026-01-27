@@ -107,7 +107,7 @@ export function DockExpanded({
         maxWidth: "95vw",
         left: "50%",
         transform: "translateX(-50%)",
-        height: { xs: 80, sm: 100, md: 120 },
+        height: { xs: 90, sm: 100, md: 120 },
         zIndex: Z_INDEX.DOCK,
         display: "flex",
         alignItems: "center",
@@ -121,29 +121,27 @@ export function DockExpanded({
         sx={{
           display: "flex",
           alignItems: "center",
-          gap: { xs: 0.5, sm: 1 },
+          gap: 1,
           cursor: "pointer",
           color: "primary.main",
-          mr: { xs: 0.5, sm: 1 },
+          mr: 1,
           "&:hover": {
             opacity: 0.8,
           },
         }}
       >
-        <StarIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
+        <StarIcon sx={{ fontSize: 24 }} />
         <Typography
           variant="body1"
           fontWeight={600}
           sx={{
-            fontSize: { xs: "0.875rem", sm: "1rem" },
-            display: { xs: "none", sm: "block" },
+            fontSize: { xs: 12, sm: 16 },
           }}
         >
           plugilo
         </Typography>
       </Box>
 
-      {/* Left arrow - only show when not at beginning */}
       {!isBeginning && (
         <IconButton
           size="small"
@@ -154,7 +152,6 @@ export function DockExpanded({
         </IconButton>
       )}
 
-      {/* Center: Swipeable stack thumbnails */}
       <Box sx={{ flex: 1, overflow: "hidden" }}>
         {stacks.length === 0 ? (
           <Typography variant="body2" color="text.secondary" sx={{ px: 2 }}>
@@ -195,7 +192,6 @@ export function DockExpanded({
         )}
       </Box>
 
-      {/* Right arrow - only show when not at end */}
       {!isEnd && (
         <IconButton
           size="small"

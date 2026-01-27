@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Provider } from "react-redux";
-import { ThemeProvider, CssBaseline } from "@mui/material";
+import { ThemeProvider, ScopedCssBaseline } from "@mui/material";
 import { CacheProvider } from "@emotion/react";
 import { createStore } from "@/store";
 import { createAppTheme, createEmotionCache } from "@/theme";
@@ -116,12 +116,19 @@ export function WishlistDockRoot({
     <CacheProvider value={emotionCache}>
       <Provider store={store}>
         <ThemeProvider theme={muiTheme}>
-          <CssBaseline />
-          <Dock
-            themeMode={mode}
-            onToggleTheme={handleToggleTheme}
-            portalContainer={appContainer}
-          />
+          <ScopedCssBaseline
+            enableColorScheme
+            sx={{
+              backgroundColor: "transparent",
+              minHeight: "auto",
+            }}
+          >
+            <Dock
+              themeMode={mode}
+              onToggleTheme={handleToggleTheme}
+              portalContainer={appContainer}
+            />
+          </ScopedCssBaseline>
         </ThemeProvider>
       </Provider>
     </CacheProvider>

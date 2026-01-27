@@ -50,7 +50,9 @@ export function CardSwiper({
   };
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+    <Box
+      sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+    >
       <Box
         sx={{
           width: cardWidth + 24,

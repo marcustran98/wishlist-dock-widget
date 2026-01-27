@@ -11,6 +11,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  useTheme,
 } from "@mui/material";
 import CasinoIcon from "@mui/icons-material/Casino";
 import type { Stack, Card } from "@/types";
@@ -49,6 +50,7 @@ function CardDialogForm({
   onClose,
   onSave,
 }: CardDialogFormProps) {
+  const theme = useTheme();
   const [name, setName] = useState(card?.name ?? "");
   const [description, setDescription] = useState(card?.description ?? "");
   const [coverUrl, setCoverUrl] = useState(card?.coverUrl ?? "");
@@ -110,8 +112,21 @@ function CardDialogForm({
           <Button
             variant="outlined"
             onClick={handleRandomImage}
-            startIcon={<CasinoIcon />}
-            sx={{ whiteSpace: "nowrap" }}
+            startIcon={
+              <CasinoIcon
+                sx={{
+                  fontSize: { xs: 12, md: 16 },
+                }}
+              />
+            }
+            sx={{
+              whiteSpace: "nowrap",
+              fontSize: { xs: 12, md: 16 },
+
+              "& .MuiButton-startIcon": {
+                margin: theme.spacing(0, 0.5, 0, 0),
+              },
+            }}
           >
             Random
           </Button>

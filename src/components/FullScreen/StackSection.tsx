@@ -47,7 +47,13 @@ export function StackSection({
           px: { xs: 1.5, sm: 2.25, md: 3 },
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1.5, md: 2 } }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: { xs: 1.5, md: 2 },
+          }}
+        >
           <Badge
             badgeContent={cards.length}
             color="primary"
@@ -69,10 +75,9 @@ export function StackSection({
           </Badge>
           <Box>
             <Typography
-              variant="h6"
               sx={{
                 fontWeight: 600,
-                fontSize: { xs: "1rem", sm: "1.1rem", md: "1.25rem" },
+                fontSize: { xs: 14, sm: 16 },
               }}
             >
               {stack.name}

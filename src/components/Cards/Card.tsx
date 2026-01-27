@@ -135,7 +135,7 @@ export function Card({
           sx={{
             color: theme.palette.common.white,
             fontWeight: 600,
-            fontSize: { xs: "1rem", sm: "1.1rem", md: "1.25rem" },
+            fontSize: { xs: 14, sm: 16, md: 20 },
           }}
         >
           {card.name}
@@ -146,7 +146,7 @@ export function Card({
             sx={{
               color: alpha(theme.palette.common.white, 0.7),
               mt: 0.5,
-              fontSize: { xs: "0.75rem", md: "0.875rem" },
+              fontSize: { xs: 12, md: 14 },
               overflow: "hidden",
               textOverflow: "ellipsis",
               display: "-webkit-box",
